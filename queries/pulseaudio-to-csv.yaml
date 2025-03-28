@@ -23,7 +23,7 @@ physical:
       socketDomain: AF_INET
       socketType: SOCK_STREAM
       socketPort: 22346
-      socketHost: host.docker.internal
+      socketHost: unpacked-audio
       socketBufferSize: 4
       flushIntervalMS: 100
       connectTimeoutSeconds: 60

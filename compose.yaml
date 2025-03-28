@@ -1,11 +1,9 @@
 services:
+
   worker:
     build: ./worker
-    #    links: 
-    #      - pulseaudio-simple-tcp:pulseaudio
     ports:
       - 8080:8080
-      - 22346:22346
     healthcheck:
       test: lsof -i:8080 | grep 'LISTEN'
       interval: 15s
@@ -13,11 +11,34 @@ services:
       retries: 3
       start_period: 10s
       start_interval: 5s
-#  pulseaudio-simple-tcp:
-#    build: nebulastream/pulseaudio-simple-tcp-server
-#    ports: 
-#      - "22345:22345"
-#      - "4711:4713"
+
+  pulseaudio-simple-tcp:
+    image: nebulastream/pulseaudio-simple-tcp-server
+    environment:
+      - PULSE_COOKIE=${PULSE_COOKIE?PULSE_COOKIE is needed to authenticate with the server providing an audio source} # forces warning if not set
+      - SOURCE_HOST=host.docker.internal
+      - SOURCE_PORT=4713
+    volumes:
+      - type: bind
+        source: "${PULSE_COOKIE}"
+        target: /var/run/pulse/.config/pulse/cookie
+        read_only: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 22345:22345
+
+  unpacked-audio:
+    build: ./audioformatter
+    ports:
+      - 22346:22346
+    environment:
+      - SOURCE_HOST=pulseaudio-simple-tcp
+      - SOURCE_PORT=22345
+      - SINK_PORT=22346
+    depends_on:
+      - pulseaudio-simple-tcp
+
   audio-query:
     image: nebulastream/nebuli:main
     entrypoint: ["bash", "-c", "nes-nebuli register -x -s worker:8080 -i query.yaml"]
@@ -30,5 +51,7 @@ services:
       worker:
         condition: service_healthy
         restart: true
+      unpacked-audio:
+        condition: service_started
 
   
