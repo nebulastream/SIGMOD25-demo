@@ -13,7 +13,7 @@ services:
       start_interval: 5s
 
   pulseaudio-simple-tcp:
-    image: nebulastream/pulseaudio-simple-tcp-server
+    image: nebulastream/pulseaudio-simple-tcp-server:0.0.0
     environment:
       - PULSE_COOKIE=${PULSE_COOKIE?PULSE_COOKIE is needed to authenticate with the server providing an audio source} # forces warning if not set
       - SOURCE_HOST=host.docker.internal
