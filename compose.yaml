@@ -13,16 +13,11 @@ services:
       start_interval: 5s
 
   pulseaudio-simple-tcp:
-    image: nebulastream/pulseaudio-simple-tcp-server:0.0.0
+    build:
+      context: ./audio-simple-tcp
     environment:
-      - PULSE_COOKIE=${PULSE_COOKIE?PULSE_COOKIE is needed to authenticate with the server providing an audio source} # forces warning if not set
       - SOURCE_HOST=host.docker.internal
       - SOURCE_PORT=4713
-    volumes:
-      - type: bind
-        source: "${PULSE_COOKIE}"
-        target: /var/run/pulse/.config/pulse/cookie
-        read_only: true
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

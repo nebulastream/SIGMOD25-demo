@@ -2,12 +2,15 @@
 
 ## Build
 
- PULSE_COOKIE="" docker compose build
+1. Ensure pulseaudio server is running on host. `pactl info`
+1. Copy your PULSE_COOKIE to ./audio-simple-tcp/ (It is typically found at ~/.config/pulse/cookie)
+   `cp ~/.config/pulse/cookie ./audio-simple-tcp/cookie`
+1. `docker-compose build` or if not using standalone `docker compose build`
 
 ## Run
 
-1. Ensure pulseaudio server is running on host with a valid audio source.
-1. Set PULSE_COOKIE envvar as an absolute path, typically located at ~/.config/pulse/cookie
-   `export PULSE_COOKIE=<FULL_PATH_TO_COOKIE>`
-1. `docker-compose up`
+Note: The audio containers do not play nice with rootless docker. Run with a rooted daemon to avoid issues with the audio container failing to build a tunnel to the pulse-audio server of the host machine.
+
+1. Ensure pulseaudio server is running on host with a valid audio source. `pactl list sources short`
+1. `docker-compose up` or if not using standalone `docker compose up`
 
