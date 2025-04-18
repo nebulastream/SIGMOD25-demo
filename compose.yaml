@@ -35,7 +35,7 @@ services:
       - pulseaudio-simple-tcp
 
   audio-query:
-    image: nebulastream/nebuli:main
+    image: nebulastream/nebuli:demo-0.0.0a3
     entrypoint: ["bash", "-c", "nes-nebuli register -x -s worker:8080 -i query.yaml"]
     volumes:
       - type: bind
