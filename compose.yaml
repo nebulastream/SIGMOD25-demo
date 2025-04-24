@@ -23,17 +23,6 @@ services:
     ports:
       - 22345:22345
 
-  unpacked-audio:
-    build: ./audioformatter
-    ports:
-      - 22346:22346
-    environment:
-      - SOURCE_HOST=pulseaudio-simple-tcp
-      - SOURCE_PORT=22345
-      - SINK_PORT=22346
-    depends_on:
-      - pulseaudio-simple-tcp
-
   audio-query:
     image: nebulastream/nebuli:demo-0.0.0a3
     entrypoint: ["bash", "-c", "nes-nebuli register -x -s worker:8080 -i query.yaml"]
@@ -46,7 +35,7 @@ services:
       worker:
         condition: service_healthy
         restart: true
-      unpacked-audio:
+      pulseaudio-simple-tcp:
         condition: service_started
 
   

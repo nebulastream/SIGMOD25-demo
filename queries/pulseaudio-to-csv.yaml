@@ -15,15 +15,14 @@ logical:
 physical:
   - logical: tcp_source
     parserConfig:
-      type: CSV
-      tupleDelimiter: "\n"
-      fieldDelimiter: ","
+      type: Internal
+      hasSpanningTuples: false
     sourceConfig:
       type: TCP
       socketDomain: AF_INET
       socketType: SOCK_STREAM
-      socketPort: 22346
-      socketHost: unpacked-audio
+      socketPort: 22345
+      socketHost: pulseaudio-simple-tcp
       socketBufferSize: 4
       flushIntervalMS: 100
       connectTimeoutSeconds: 60
