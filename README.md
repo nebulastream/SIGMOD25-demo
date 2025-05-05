@@ -1,8 +1,10 @@
 # Query Concepts
 
+
+## Live Panel
+
 ```mermaid
 
-%% Live Panel
 graph LR;
 %% Sources
     DraegerPM[Draeger Patient Monitor]
@@ -38,6 +40,7 @@ graph LR;
 
 ```
 
+## ARDS Example
 ```mermaid
 
 %% ARDS Example
@@ -73,6 +76,7 @@ graph LR;
 
 ```
 
+## Shock Example
 ```mermaid
 
 %% Shock Example
