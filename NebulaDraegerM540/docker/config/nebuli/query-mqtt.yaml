@@ -1,0 +1,39 @@
+query: |
+  SELECT * FROM mqtt_source INTO mqtt_sink
+
+sink:
+  name: mqtt_sink
+  type: MQTT
+  config:
+    inputFormat: CSV
+    serverURI: "tcp://mosquitto:1883",
+     clientId: "local-subscriber"
+     topic: "test/topic"
+     qos: 0
+
+#sink:
+#  name: mqtt_sink
+#  type: File
+#  config:
+#    inputFormat: CSV
+#    filePath: "test-mqtt.csv"
+#    append: false
+
+logical:
+  - name: mqtt_source
+    schema:
+      - name: id
+        type: UINT64
+
+physical:
+  - logical: mqtt_source
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "\n"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: "tcp://mosquitto:1883"
+      clientId: "local-subscriber"
+      topic: "$SYS/#"
+      qos: 0

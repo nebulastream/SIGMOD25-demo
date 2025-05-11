@@ -1,0 +1,73 @@
+# Python bytecode files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# IDE/editor folders and files
+.vscode/
+.idea/
+*.swp
+
+# System files (macOS, Windows, Linux)
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# Log files
+*.log
+
+# Package distribution files
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+sdist/
+var/
+*.manifest
+*.spec
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# pytest cache
+.cache/
+
+# Python coverage files
+.coverage
+.coverage.*
+nosetests.xml
+pytest-debug.log
+
+# mypy
+.mypy_cache/
+.dmypy.json
+
+# pipenv
+Pipfile.lock
+
+# pyenv
+.python-version
+
+# tox
+.tox/
+.nox/
+.coverage
+*.coveragerc
+nosetests.xml
+tox.ini
+
+# celery beat schedule file
+celerybeat-schedule
+
+# distribution and package files
+*.tar.gz
+*.zip

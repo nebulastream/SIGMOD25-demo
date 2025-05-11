@@ -1,0 +1,30 @@
+services:
+  script:
+    image: m540-script:latest
+    entrypoint: ["bash", "-c", "python3 /src/main.py"]
+    volumes:
+      - ./config/script:/config/script
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+
+  worker:
+    image: nebulastream/worker:main
+    ports:
+      - 8080:8080
+    depends_on:
+      - script
+
+  mosquitto:
+    image: eclipse-mosquitto
+    ports:
+      - 1883:1883
+    volumes:
+      - ./config/mosquitto:/mosquitto/config
+
+  nebuli-mqtt-spo2:
+    image: nebulastream/nebuli:local
+    entrypoint: ["bash", "-c", "nes-nebuli register -x -s worker:8080 -i config/query-mqtt.yaml"]
+    volumes:
+      - ./config/nebuli:/config/
+    depends_on:
+      - worker

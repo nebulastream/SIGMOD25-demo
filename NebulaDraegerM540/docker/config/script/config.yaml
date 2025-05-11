@@ -1,0 +1,19 @@
+serial_port: "/dev/ttyUSB0"
+log_level: "INFO" # {DEBUG, INFO, WARNING, ERROR} are supported as of now, default is INFO
+signals:
+
+  - signal: "PLS"
+    transfer_protocol: "mqtt"
+    mqtt_broker: "mosquitto"
+    mqtt_port: 1883
+    mqtt_keepalive: 60
+    mqtt_format: "json" # json or csv
+    mqtt_topic: "patientMonitor"
+
+  - signal: "SPO2"
+    transfer_protocol: "mqtt"
+    mqtt_broker: "mosquitto"
+    mqtt_port: 1883
+    mqtt_keepalive: 60
+    mqtt_format: "json" # json or csv
+    mqtt_topic: "patientMonitor"
