@@ -1,7 +1,9 @@
 services:
 
   worker:
-    build: ./worker
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
     ports:
       - 8080:8080
     healthcheck:
@@ -12,30 +14,36 @@ services:
       start_period: 10s
       start_interval: 5s
 
-  pulseaudio-simple-tcp:
+  audio-server:
     build:
-      context: ./audio-simple-tcp
-    environment:
-      - SOURCE_HOST=host.docker.internal
-      - SOURCE_PORT=4713
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      context: .
+      dockerfile: server/Dockerfile
     ports:
-      - 22345:22345
+      - 5555:5555
+    devices:
+      - "/dev/snd:/dev/snd"
+    environment:
+      - PYTHONUNBUFFERED=1
+    stdin_open: true
+    tty: true
 
   audio-query:
-    image: nebulastream/nebuli:demo-0.0.0a3
+    image: nebulastream/nebuli:audio-inference
     entrypoint: ["bash", "-c", "nes-nebuli register -x -s worker:8080 -i query.yaml"]
     volumes:
       - type: bind
-        source: ./queries/pulseaudio-to-csv.yaml
+        source: ./queries/speech_recognition_audio.yaml
         target: /query.yaml
+        read_only: true
+      - type: bind
+        source: ./data/audio_model.onnx
+        target: /audio_model.onnx
         read_only: true
     depends_on:
       worker:
         condition: service_healthy
         restart: true
-      pulseaudio-simple-tcp:
+      audio-server:
         condition: service_started
 
   
