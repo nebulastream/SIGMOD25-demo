@@ -8,7 +8,7 @@ services:
       - /dev/ttyUSB0:/dev/ttyUSB0
 
   worker:
-    image: nebulastream/worker:main
+    image: nebulastream/worker:521-implement-mqtt-sink
     ports:
       - 8080:8080
     depends_on:
@@ -21,8 +21,8 @@ services:
     volumes:
       - ./config/mosquitto:/mosquitto/config
 
-  nebuli-mqtt-spo2:
-    image: nebulastream/nebuli:local
+  nebuli-mqtt:
+    image: nebulastream/nebuli:521-implement-mqtt-sink
     entrypoint: ["bash", "-c", "nes-nebuli register -x -s worker:8080 -i config/query-mqtt.yaml"]
     volumes:
       - ./config/nebuli:/config/

@@ -1,36 +1,7 @@
 This README explains how to set up the jumphost for the Draeger Patient Monitor.
 The end goal is to have the signals "PLS" and "SPO2" published to mqtt at port 1883. The topics are "patientMonitor/SPO2" / "patientMonitor/PLS"
 
-## Build the correct nebuli image
-As of now (May '25), the public nebulastream/nebuli:lastest image does not support MQTT, so we need to build the nebulastream/neubli image locally from this branch:
-
-https://github.com/nebulastream/nebulastream-SIGMOD-Demo/tree/main
-
-You can do so with the same instructions as here (until but not including "Modifying dependencies"):
-
-https://github.com/nebulastream/nebulastream-public/blob/main/docs/technical/development.md
-
-That should give you a binary at _build-docker/nes-nebuli/nes-nebuli_.
-
-Next, set up a Dockerfile at _docker/nebuli-runtime/Dockerfile_ like this:
-
-```
-FROM ubuntu:22.04
-COPY nes-nebuli /usr/local/bin/nes-nebuli
-RUN chmod +x /usr/local/bin/nes-nebuli
-ENTRYPOINT ["/usr/local/bin/nes-nebuli"]
-```
-
-and build the image:
-
-    docker build -t nebulastream/nebuli:local docker/nebuli-runtime
-
-Check that the image nebulastream/nebuli:local exists:
-
-    docker images
-
 ## Build the script image
-Now we can proceed with the actual script.
 Build the script image (from _SIGMOD25-demo/NebulaDraegerM540_):
 
     sudo docker build -t m540-script .

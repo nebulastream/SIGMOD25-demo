@@ -6,10 +6,10 @@ sink:
   type: MQTT
   config:
     inputFormat: CSV
-    serverURI: "tcp://mosquitto:1883",
-     clientId: "local-subscriber"
-     topic: "test/topic"
-     qos: 0
+    serverURI: "tcp://mosquitto:1883"
+    clientId: "patient_monitor_sink"
+    topic: "test/topic"
+    qos: 0
 
 #sink:
 #  name: mqtt_sink
@@ -22,7 +22,9 @@ sink:
 logical:
   - name: mqtt_source
     schema:
-      - name: id
+      - name: ts
+        type: UINT64
+      - name: value
         type: UINT64
 
 physical:
@@ -34,6 +36,7 @@ physical:
     sourceConfig:
       type: MQTT
       serverURI: "tcp://mosquitto:1883"
-      clientId: "local-subscriber"
-      topic: "$SYS/#"
+      clientId: "patient_monitor_source"
+      topic: "patientMonitor/SPO2"
+      #topic: "$SYS/#"
       qos: 0
