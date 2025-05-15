@@ -7,9 +7,14 @@ Build the script image (from _SIGMOD25-demo/NebulaDraegerM540_):
     sudo docker build -t m540-script .
 
 ## Start the setup
-Now, from the _SIGMOD25-demo/NebulaDraegerM540/docker_, just run
+You need to pass the serial port that the patient monitor is connected to as en envar to the docker compose. Otherwise, it will fall back to /dev/USB0.
+It should appear under, depending on your OS.
 
-    docker-compose up
+    ls /dev/tty*
+
+Now, from _SIGMOD25-demo/NebulaDraegerM540/docker_, with the correct USB_DEV=<_correct port_> envar, just run
+
+    USB_DEV=/dev/ttyUSB0 docker-compose up
 
 and you should see something like
 

@@ -5,7 +5,9 @@ services:
     volumes:
       - ./config/script:/config/script
     devices:
-      - /dev/ttyUSB0:/dev/ttyUSB0
+      - "${USB_DEV}:${USB_DEV}"
+    environment:
+      - USB_DEV=${USB_DEV}
 
   worker:
     image: nebulastream/worker:521-implement-mqtt-sink

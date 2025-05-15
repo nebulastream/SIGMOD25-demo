@@ -1,3 +1,5 @@
+import os
+
 import serial
 import time
 import struct
@@ -20,7 +22,9 @@ logging.basicConfig(level=log_level, format="%(asctime)s - %(levelname)s - %(mes
 
 
 def run():
-    ser = serial.Serial(port=config["serial_port"], baudrate=19200, bytesize=serial.EIGHTBITS,
+    serial_port = os.getenv("USB_DEV", "/dev/ttyUSB0")
+    logging.info(f"Reading from: {serial_port}")
+    ser = serial.Serial(port=serial_port, baudrate=19200, bytesize=serial.EIGHTBITS,
                         parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=1)
 
     # Send break message to wake the server up

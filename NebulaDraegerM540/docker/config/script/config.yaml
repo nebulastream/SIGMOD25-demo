@@ -1,4 +1,4 @@
-serial_port: "/dev/ttyUSB0"
+#serial_port: "${USB_DEV}"
 log_level: "INFO" # {DEBUG, INFO, WARNING, ERROR} are supported as of now, default is INFO
 signals:
 
