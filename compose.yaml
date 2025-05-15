@@ -11,31 +11,21 @@ services:
       retries: 3
       start_period: 10s
       start_interval: 5s
-
-  pulseaudio-simple-tcp:
-    build:
-      context: ./audio-simple-tcp
-    environment:
-      - SOURCE_HOST=host.docker.internal
-      - SOURCE_PORT=4713
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - 22345:22345
-
-  audio-query:
-    image: nebulastream/nebuli:demo-0.0.0a3
-    entrypoint: ["bash", "-c", "nes-nebuli register -x -s worker:8080 -i query.yaml"]
-    volumes:
-      - type: bind
-        source: ./queries/pulseaudio-to-csv.yaml
-        target: /query.yaml
-        read_only: true
-    depends_on:
-      worker:
-        condition: service_healthy
-        restart: true
-      pulseaudio-simple-tcp:
-        condition: service_started
-
   
+  # The dashboard UI
+  dashboard:
+    image: nebulastream/needmi-demo-ui:latest
+    # Access the UI inside the browser on the host system.
+    ports:
+      - 3000:3000
+
+  # Mosquitto is used to exchange events between the data generator, NebulaStream workers, and the 3D visualization.
+  mosquitto:
+    image: eclipse-mosquitto
+    ports:
+      # Port 1883 listens over TCP and can be used with Mosquitto command line tools on the host system.
+      - 1883:1883
+      # Port 9001 listens over Websockets and is used by the workers, by the 3D visualization, and by Grafana.
+      - 9001:9001
+    volumes:
+      - ./config/mosquitto:/mosquitto/config
