@@ -30,9 +30,12 @@ services:
       # pick up the discovered mic source:
       SOURCE: ${PULSE_SOURCE}
 
+      # for faster data ingestion
+      PULSE_LATENCY_MSEC: "20"
+
     # on startup, stream your mic out on TCP 1234
     command: >
-       sh -c "parec --format=s16le --rate=48000 --channels=2 --device=$$SOURCE |
+       sh -c "parec --format=s16le --rate=16000 --channels=1 --device=$$SOURCE |
              socat -u - TCP-LISTEN:1234,reuseaddr,fork"
 
 #      sh -c "parec \
