@@ -9,8 +9,15 @@ RUN apt-get update && \
 # create a user with args from Compose
 ARG HOST_UID
 ARG HOST_GID
-RUN groupadd -g ${HOST_GID} hostgroup \
- && useradd -m -u ${HOST_UID} -g ${HOST_GID} hostuser
+
+# only create the group/user if they don't already exist
+RUN set -eux; \
+    if ! getent group "${HOST_GID}" >/dev/null; then \
+      groupadd -g "${HOST_GID}" hostgroup; \
+    fi; \
+    if ! id -u "${HOST_UID}" >/dev/null 2>&1; then \
+      useradd -m -u "${HOST_UID}" -g "${HOST_GID}" hostuser; \
+    fi
 
 USER hostuser
 WORKDIR /home/hostuser
