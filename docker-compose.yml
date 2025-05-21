@@ -73,19 +73,31 @@ services:
        sh -c "parec --format=s16le --rate=16000 --channels=1 --device=$$SOURCE |
              socat -u - TCP-LISTEN:1234,reuseaddr,fork"
 
-  # nebuli for mqtt bypass (source to sink)
-  nebuli:
-    image: nebulastream/nebuli:video-demo
-    depends_on:
-      - nes
-      - mosquitto
-    volumes:
-      - ./queries:/queries
-      - ./model:/model
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/mqtt.yaml" ]
+  # # nebuli for mqtt bypass (source to sink)
+  # nebuli:
+  #   image: nebulastream/nebuli:video-demo
+  #   depends_on:
+  #     - nes
+  #     - mosquitto
+  #   volumes:
+  #     - ./queries:/queries
+  #     - ./model:/model
+  #   command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/mqtt.yaml" ]
 
   # nebuli for audio ingestion
-  audio-query:
+  # audio-query:
+  #   image: nebulastream/nebuli:video-demo
+  #   depends_on:
+  #     - nes
+  #     - mosquitto
+  #     - mic-stream
+  #   volumes:
+  #     - ./queries:/queries
+  #     - ./model:/model
+  #   command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/speech_recognition_audio.yml" ]
+
+  # nebuli Alert Lab Values
+  lv-s2s:
     image: nebulastream/nebuli:video-demo
     depends_on:
       - nes
@@ -94,45 +106,75 @@ services:
     volumes:
       - ./queries:/queries
       - ./model:/model
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/speech_recognition_audio.yml" ]
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/lab_values_s2s.yaml" ]
 
-  mqtt-publisher:
-    container_name: mqtt-publisher
+  # nebuli source-to-sink Lab Values
+  lv-alert:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - mic-stream
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/lab_values_alert.yaml" ]
+
+  # nebuli Alert audio ingestion, Checks for word  "backward"
+  audio-alert:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - mic-stream
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/audio_alert.yaml" ]
+  
+  dashboard:
+    image: nebulastream/needmi-demo-ui:v0.0.2
     depends_on:
       - mosquitto
-    environment:
-      - MQTT_HOST=mosquitto
-      - MQTT_PORT=1883
-    build:
-      dockerfile_inline: |
-        FROM alpine:latest
+    ports:
+      - 3000:3000
+  # mqtt-publisher:
+  #   container_name: mqtt-publisher
+  #   depends_on:
+  #     - mosquitto
+  #   environment:
+  #     - MQTT_HOST=mosquitto
+  #     - MQTT_PORT=1883
+  #   build:
+  #     dockerfile_inline: |
+  #       FROM alpine:latest
         
-        RUN apk add --no-cache mosquitto-clients bash
+  #       RUN apk add --no-cache mosquitto-clients bash
         
-        # Create the publish script
-        RUN cat > /publish.sh <<'EOF'
-        #!/bin/bash
-        # MQTT broker settings
-        MQTT_HOST="$${MQTT_HOST:-mosquitto}"
-        MQTT_PORT="$${MQTT_PORT:-1883}"
-        MQTT_TOPIC="test/messages"
+  #       # Create the publish script
+  #       RUN cat > /publish.sh <<'EOF'
+  #       #!/bin/bash
+  #       # MQTT broker settings
+  #       MQTT_HOST="$${MQTT_HOST:-mosquitto}"
+  #       MQTT_PORT="$${MQTT_PORT:-1883}"
+  #       MQTT_TOPIC="test/messages"
         
-        # Function to publish messages
-        publish_message() {
-            local message="$$1"
-            mosquitto_pub -h $$MQTT_HOST -p $$MQTT_PORT -t $$MQTT_TOPIC -m "$$message"
-        }
+  #       # Function to publish messages
+  #       publish_message() {
+  #           local message="$$1"
+  #           mosquitto_pub -h $$MQTT_HOST -p $$MQTT_PORT -t $$MQTT_TOPIC -m "$$message"
+  #       }
         
-        # Publish messages in a loop
-        sleep 5
-        counter=1
-        while true; do
-            sleep 0.1
-            publish_message "$$counter,$$counter|"
-            counter=$$((counter + 1))
-        done
-        EOF
+  #       # Publish messages in a loop
+  #       sleep 5
+  #       counter=1
+  #       while true; do
+  #           sleep 0.1
+  #           publish_message "$$counter,$$counter|"
+  #           counter=$$((counter + 1))
+  #       done
+  #       EOF
         
-        RUN chmod +x /publish.sh
+  #       RUN chmod +x /publish.sh
         
-        CMD ["/publish.sh"]
+  #       CMD ["/publish.sh"]

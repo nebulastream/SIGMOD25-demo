@@ -1,0 +1,30 @@
+query: |
+  SELECT UINT32(3) AS alertType, timestamp, value FROM mqtt_source WHERE value > FLOAT64(50.0) INTO alert_sink
+sink:
+  name: alert_sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://mosquitto:1883
+    clientId: client_alert_two
+    topic: alert
+    qos: 0
+logical:
+  - name: mqtt_source
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT64
+physical:
+  - logical: mqtt_source
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://mosquitto:1883
+      clientId: client_one_alert
+      topic: source/lab_values
+      qos: 0
