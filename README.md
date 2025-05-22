@@ -65,11 +65,11 @@ graph LR;
         jARDS@{shape: join, label: "Join ARDS Symptoms"}
         dTachy --> jSuggestAscultation
         dHypox --> jSuggestAscultation
-        jSuggestAscultation --> AlertSuggestAscultation@{shape: in-out, label: "Smart Alert Suggest Diagnostic Ascultation"}
+        jSuggestAscultation --> AlertSuggestAscultation@{shape: in-out, label: "Smart Alert Suggest Diagnostic Ascultation (Optional)"}
         dCrackle --> jSuggestXRay
         jSuggestAscultation --> jSuggestXRay
         jSuggestXRay --> jARDS
-        jSuggestXRay --> AlertSuggestXRay@{shape: in-out, label: "Smart Alert Suggest Diagnostic X-Ray"}
+        jSuggestXRay --> AlertSuggestXRay@{shape: in-out, label: "Smart Alert Suggest Diagnostic X-Ray (Optional)"}
         jARDS --> AlertSuggestARDS@{shape: in-out, label: "Smart Alert Suggest Investigate ARDS"}
         pLungBright --> dLungBright --> jARDS
     end
