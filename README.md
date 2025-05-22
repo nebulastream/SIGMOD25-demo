@@ -57,14 +57,20 @@ graph LR;
     subgraph ARDS Query
         dTachy@{shape: diamond, label: "HR > 100"}
         dHypox@{shape: diamond, label: "SpO2 <= 97"}
-        dCrackle@{shape: proc, label: "Crackle Classifier"}
+        dCrackle@{shape: proc, label: "Crackle Classifier (Word Detection)"}
         pLungBright@{shape: proc, label: "Avg Brightness"}
         dLungBright@{shape: diamond, label: "Avg Bright > XXX"}
+        jSuggestAscultation@{shape: join, label: "Join ARDS Symptoms Ascul"}
+        jSuggestXRay@{shape: join, label: "Join ARDS Symptoms XRay"}
         jARDS@{shape: join, label: "Join ARDS Symptoms"}
-        dTachy --> jARDS
-        dHypox --> jARDS
-        dCrackle --> jARDS
-        jARDS --> AlertSuggestXRay@{shape: in-out, label: "Smart Alert Suggest Investigate ARDS"}
+        dTachy --> jSuggestAscultation
+        dHypox --> jSuggestAscultation
+        jSuggestAscultation --> AlertSuggestAscultation@{shape: in-out, label: "Smart Alert Suggest Diagnostic Ascultation"}
+        dCrackle --> jSuggestXRay
+        jSuggestAscultation --> jSuggestXRay
+        jSuggestXRay --> jARDS
+        jSuggestXRay --> AlertSuggestXRay@{shape: in-out, label: "Smart Alert Suggest Diagnostic X-Ray"}
+        jARDS --> AlertSuggestARDS@{shape: in-out, label: "Smart Alert Suggest Investigate ARDS"}
         pLungBright --> dLungBright --> jARDS
     end
 
