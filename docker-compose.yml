@@ -73,6 +73,13 @@ services:
        sh -c "parec --format=s16le --rate=16000 --channels=1 --device=$$SOURCE |
              socat -u - TCP-LISTEN:1234,reuseaddr,fork"
 
+  # patient monitor ECG signal (replay)
+  pm-signal:
+    container_name: pm-signal
+    build:
+      context: patient-monitor/replay
+      #image: patientMonitorReplay
+
   # # nebuli for mqtt bypass (source to sink)
   # nebuli:
   #   image: nebulastream/nebuli:video-demo

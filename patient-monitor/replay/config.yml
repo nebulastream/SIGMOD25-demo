@@ -1,0 +1,4 @@
+broker: mosquitto
+port: 1883
+topic: patientMonitor/ECG
+period: 1 # milliseconds between publishes
