@@ -131,6 +131,24 @@ services:
       - ./queries:/queries
       - ./model:/model
     command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/audio_alert.yaml" ]
+
+  nebuli-patient-monitor-spo2:
+    image: nebulastream/nebuli:video-demo
+    volumes:
+      - ./queries:/queries
+    depends_on:
+      - nes
+      - mosquitto
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/patient_monitor_spo2.yaml" ]
+
+  nebuli-patient-monitor-pls:
+    image: nebulastream/nebuli:video-demo
+    volumes:
+      - ./queries:/queries
+    depends_on:
+      - nes
+      - mosquitto
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/patient_monitor_pls.yaml" ]
   
   dashboard:
     image: nebulastream/needmi-demo-ui:v0.0.2
@@ -178,3 +196,42 @@ services:
   #       RUN chmod +x /publish.sh
         
   #       CMD ["/publish.sh"]
+
+  patient-monitor-start-request:
+    image: curlimages/curl:latest
+    environment:
+      - JUMP_HOST=${JUMP_HOST}
+      - USB_DEV=${USB_DEV}
+      - LOCAL_IP=${LOCAL_IP}
+    entrypoint: /bin/sh
+    command: >
+      -c '
+      curl -X POST http://$JUMP_HOST:5000/start-script
+      -H "X-USB-DEV: $USB_DEV"
+      -H "Content-Type: application/json"
+      -d @- <<EOF
+      {
+        "log_level": "INFO",
+        "signals": [
+          {
+            "signal": "PLS",
+            "transfer_protocol": "mqtt",
+            "mqtt_broker": "$LOCAL_IP",
+            "mqtt_port": 1883,
+            "mqtt_keepalive": 60,
+            "mqtt_format": "json",
+            "mqtt_topic": "patientMonitor"
+          },
+          {
+            "signal": "SPO2",
+            "transfer_protocol": "mqtt",
+            "mqtt_broker": "$LOCAL_IP",
+            "mqtt_port": 4000,
+            "mqtt_keepalive": 60,
+            "mqtt_format": "csv",
+            "mqtt_topic": "patientMonitor"
+          }
+        ]
+      }
+      EOF
+      '
