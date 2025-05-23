@@ -55,7 +55,7 @@ def main() -> None:
     while True:
       timestamp = int(datetime.now(timezone.utc).timestamp() * 1_000)
 
-      csv_row = f"{data[index]},{timestamp}"
+      csv_row = f"{timestamp},{data[index]}|"
 
       client.publish(TOPIC, csv_row, qos=1, retain=False)
 

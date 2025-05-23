@@ -1,0 +1,30 @@
+query: |
+  SELECT * FROM pm_source INTO pm_sink
+sink:
+  name: pm_sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://mosquitto:1883
+    clientId: client_pm_source
+    topic: sink/patient_monitor
+    qos: 0
+logical:
+  - name: pm_source
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT64
+physical:
+  - logical: pm_source
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://mosquitto:1883
+      clientId: client_one_patient_monitor
+      topic: patientMonitor/ECG
+      qos: 0
