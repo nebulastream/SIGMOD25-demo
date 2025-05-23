@@ -21,8 +21,6 @@ XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
 PULSE_SOURCE=$(pactl info \
   | awk -F": " '/Default Source/ { print $2 }')
 
-PULSE_SOURCE=$(pactl info | awk -F": " '/Default Source/ { print \$2 }')
-
 ### envvars for patient monitor
 # the IP of the jumphost
 JUMP_HOST=${JUMP_HOST}
