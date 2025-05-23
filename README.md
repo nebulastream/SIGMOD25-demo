@@ -33,7 +33,7 @@ This Docker Compose runs the following services:
     - Laboratory Values can be numeric, either integer or float, positive or negative.
     - The current alert query test if the value is greater than 50, if so, then the alert tuple is emmited. It is expected that a message "Laboratory Value Higher Than 50" appears in the Alert Panel, as shown below.
     ![Laboratory Alert](docs/lab_values_alert.png)
-3. The audio source takes the default microphone and once the word "Drawback" is mentioned, the alert is triggered. If the word was correctly recognized, then it is expected that a message "That was the word Backward..." appears in the Alert Panel, as shown below.
+3. The audio source takes the default microphone and once the word "Backward" is mentioned, the alert is triggered. If the word was correctly recognized, then it is expected that a message "That was the word Backward..." appears in the Alert Panel, as shown below.
     ![Audio Alert](docs/audio_alert.png)
     **Note: Currently the model has false positives, the alert might be triggered despite the word was not the above mentioned.**
 
