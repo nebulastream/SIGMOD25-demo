@@ -5,7 +5,6 @@ This repository is an effort to bring all the work for each modality together, a
 ## Build
 
 Run the prepare script to set environment variables: `./prepare.sh`
-This will prompt you to enter the jump host's IP address and the path that the patient monitor is connected to at the jump host!
 
 ## Run
 

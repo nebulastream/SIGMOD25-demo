@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 # prepare.sh — discover host settings and write .env
 
-read -p "Enter the jump host IP: " JUMP_HOST
-
-read -p "Enter the USB device path that the Patient Monitor is connected to on the jump host! [press enter for default: /dev/ttyUSB0]: " USB_DEV
-USB_DEV=${USB_DEV:-/dev/ttyUSB0}
+source ./patient-monitor/live/prepare_patient_monitor.env
 
 # auto-detect local IP
 LOCAL_IP=$(ip route get 1 | awk '{print $NF; exit}')
+LOCAL_IP=xxx.xxx.xxx
 
 cat > .env <<EOF
 # host user/group mapped into the container:
@@ -34,3 +32,7 @@ EOF
 
 echo ".env written:"
 cat .env
+
+# substitute env vars and create start_payload.json
+export LOCAL_IP USB_DEV JUMP_HOST
+envsubst < patient-monitor/live/start_payload.json.template > patient-monitor/live/start_payload.json
