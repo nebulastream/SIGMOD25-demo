@@ -4,8 +4,7 @@
 source ./patient-monitor/live/prepare_patient_monitor.env
 
 # auto-detect local IP
-LOCAL_IP=$(ip route get 1 | awk '{print $NF; exit}')
-LOCAL_IP=xxx.xxx.xxx
+LOCAL_IP=$(hostname -I | awk '{print $1}')
 
 cat > .env <<EOF
 # host user/group mapped into the container:
@@ -33,6 +32,6 @@ EOF
 echo ".env written:"
 cat .env
 
-# substitute env vars and create start_payload.json
+# substitute env vars and create start_payload_generated.json
 export LOCAL_IP USB_DEV JUMP_HOST
-envsubst < patient-monitor/live/start_payload.json.template > patient-monitor/live/start_payload.json
+envsubst < patient-monitor/live/start_payload.json.template > patient-monitor/live/start_payload_generated.json
