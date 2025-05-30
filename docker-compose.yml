@@ -133,7 +133,7 @@ services:
     command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/audio_alert.yaml" ]
   
   dashboard:
-    image: nebulastream/needmi-demo-ui:v0.0.2
+    image: nebulastream/needmi-demo-ui:latest
     depends_on:
       - mosquitto
     ports:
