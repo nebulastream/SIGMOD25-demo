@@ -80,6 +80,12 @@ services:
       context: patient-monitor/replay
       #image: patientMonitorReplay
 
+  # lab values (replay)
+  lab-values-replay:
+    container_name: lab-values
+    build:
+      context: lab-values/replay
+
   # # nebuli for mqtt bypass (source to sink)
   # nebuli:
   #   image: nebulastream/nebuli:video-demo

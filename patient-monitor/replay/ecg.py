@@ -34,12 +34,13 @@ def on_publish(client, userdata, mid):
 
 def main() -> None:
 
-  cfg = load_cfg()
+  cfg = yaml.safe_load(Path("config.yml").read_text()) or {}
+  ecg_cfg = cfg.get("ecg", {})
 
-  BROKER_HOST    = cfg.get("broker", "localhost")
-  BROKER_PORT    = cfg.get("port", 1882)
-  TOPIC          = cfg.get("topic", "patientMonitor/ECG")
-  PUBLISH_PERIOD = cfg.get("period", 30) # in ms
+  BROKER_HOST    = ecg_cfg.get("broker", "localhost")
+  BROKER_PORT    = ecg_cfg.get("port", 1882)
+  TOPIC          = ecg_cfg.get("topic", "patientMonitor/ECG")
+  PUBLISH_PERIOD = ecg_cfg.get("period", 30) # in ms
 
   data = generate_data()
   index = 0
