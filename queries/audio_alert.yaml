@@ -1,13 +1,21 @@
 query: |
-  SELECT start, end, label, UINT32(9) AS alertType
-  FROM ( 
-  SELECT start, end, SpeechRecognitionLabel(ArgMax(output)) as label, MaxValue(output), INFER_MODEL(speech_recognition, (chunked))
+  SELECT UINT32(1) AS alertType
   FROM (
-      SELECT COUNT(value) as samples, MERGE(value) as chunked
-      FROM audio_stream WINDOW SLIDING(timestamp, size 1000000 ms, advance by 20000 ms)
+  SELECT start, end, label, COUNT(label) as freq
+    FROM (
+      SELECT start, end, label
+      FROM (
+        SELECT start, end, SpeechRecognitionLabel(ArgMax(output)) as label, MaxValue(output), INFER_MODEL(speech_recognition, (chunked))
+        FROM (
+          SELECT COUNT(value) as samples, MERGE(value) as chunked
+          FROM audio_stream WINDOW SLIDING(timestamp, size 1000000 ms, advance by 20000 ms)
+        )
+      )
+    WHERE label = VARSIZED("nine")
+    )
+  WINDOW TUMBLING(start, size 1000000 ms)
+  HAVING freq > UINT32(10)
   )
-  )
-  WHERE label = VARSIZED("backward")
   INTO csv_sink
 sink:
   name: csv_sink
