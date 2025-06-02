@@ -60,7 +60,7 @@ def main() -> None:
 
       client.publish(TOPIC, csv_row, qos=1, retain=False)
 
-      index = index + 1
+      index = (index + 1) % len(data)
 
       time.sleep(PUBLISH_PERIOD/1000)
 
