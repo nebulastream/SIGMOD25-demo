@@ -78,6 +78,9 @@ services:
     container_name: pm-signal
     build:
       context: patient-monitor/replay
+    depends_on:
+      - nes
+      - mosquitto
       #image: patientMonitorReplay
 
   # lab values (replay)
@@ -85,6 +88,9 @@ services:
     container_name: lab-values
     build:
       context: lab-values/replay
+    depends_on:
+      - nes
+      - mosquitto
 
   # # nebuli for mqtt bypass (source to sink)
   # nebuli:
