@@ -62,7 +62,7 @@ def publisher(name: str, cfg: dict):
 
     try:
         for row in read_csv_forever(csv_path):
-            payload = f"{utc_ms()},{','.join(row)}"
+            payload = f"{utc_ms()},{','.join(row)}|"
             client.publish(topic, payload, qos=1, retain=False)
             time.sleep(period_s)
     except Exception as e: # Log & exit – compose will restart
