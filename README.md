@@ -47,34 +47,31 @@ graph LR;
 
 graph LR;
 %% Define sources
-    HR@{shape: in-out, label: "Heart Rate Gen"}
+    PaO2@{shape: in-out, label: "ArterialOxygen"}
     SpO2@{shape: in-out, label: "SpO2 Gen"}
     Audio@{shape: in-out, label: "Audio"}
     LungXRay@{shape: in-out, label: "Lung X-Ray"}
+    OxygenSupply@{shape: in-out, label: "O2Supply (room 20%)"}
 
 
 %% Query ARDS
     subgraph ARDS Query
-        dTachy@{shape: diamond, label: "HR > 100"}
-        dHypox@{shape: diamond, label: "SpO2 <= 97"}
-        dCrackle@{shape: proc, label: "Crackle Classifier (Word Detection)"}
+        dHypox@{shape: diamond, label: "SpO2 <= 92"} --> HypoxiaOrCrackle
+        dCrackle@{shape: proc, label: "Crackle Classifier (Word Detection)"} --> HypoxiaOrCrackle
+        HypoxiaOrCrackle -->  AlertSuggestBloodGasAnalysis@{shape: in-out, label: "Suggest Blood Gas Analysis"}
+        HypoxiaOrCrackle -->  AlertSuggestXRay@{shape: in-out, label: "Suggest X-Ray"}
+        dHorovitz@{shape: diamond, label: "PaO2 / O2Supply <= 315 mm Hg"}
         pLungBright@{shape: proc, label: "Avg Brightness"}
         dLungBright@{shape: diamond, label: "Avg Bright > XXX"}
-        jSuggestAscultation@{shape: join, label: "Join ARDS Symptoms Ascul"}
-        jSuggestXRay@{shape: join, label: "Join ARDS Symptoms XRay"}
+        dLungBright --> AlertSuggestBloodGasAnalysis
         jARDS@{shape: join, label: "Join ARDS Symptoms"}
-        dTachy --> jSuggestAscultation
-        dHypox --> jSuggestAscultation
-        jSuggestAscultation --> AlertSuggestAscultation@{shape: in-out, label: "Smart Alert Suggest Diagnostic Ascultation (Optional)"}
-        dCrackle --> jSuggestXRay
-        jSuggestAscultation --> jSuggestXRay
-        jSuggestXRay --> jARDS
-        jSuggestXRay --> AlertSuggestXRay@{shape: in-out, label: "Smart Alert Suggest Diagnostic X-Ray (Optional)"}
-        jARDS --> AlertSuggestARDS@{shape: in-out, label: "Smart Alert Suggest Investigate ARDS"}
+        dHorovitz --> jARDS
+        jARDS --> AlertSuggestARDS@{shape: in-out, label: "Alert Berlin Def'n ARDS"}
         pLungBright --> dLungBright --> jARDS
     end
 
-    HR --> dTachy
+    PaO2 --> dHorovitz
+    OxygenSupply --> dHorovitz
     SpO2 --> dHypox
     Audio --> dCrackle
     LungXRay --> pLungBright 
