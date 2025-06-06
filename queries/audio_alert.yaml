@@ -14,7 +14,7 @@ query: |
           FROM audio_stream WINDOW SLIDING(timestamp, size 1000000 ms, advance by 20000 ms)
         )
       )
-    WHERE label = VARSIZED("nine")
+    WHERE label = VARSIZED("backward")
     )
   WINDOW TUMBLING(start, size 1000000 ms)
   HAVING freq > UINT32(15)

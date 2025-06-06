@@ -1,0 +1,28 @@
+query: |
+  SELECT * FROM audio_stream INTO audio_s2s_sink
+sink:
+  name: audio_s2s_sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://mosquitto:1883
+    clientId: iamaclient3326
+    topic: sink/audio
+    qos: 1
+logical:
+  - name: audio_stream
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT32
+physical:
+  - logical: audio_stream
+    parserConfig:
+      type: Raw
+    sourceConfig:
+      type: Audio
+      socketPort: 1234
+      socketHost: mic-stream
+      sampleRate: 16000
+      sampleWidth: 2

@@ -33,7 +33,7 @@ services:
     container_name: nes
     healthcheck:
       test: [ "CMD-SHELL", "/bin/grpc_health_probe", '-addr', 'localhost:8080' ]
-    image: nebulastream/worker:video-demo@sha256:6372167aba5742e90ddc3777b20d8ae47fa5fa6edac1a50f1fc6a4937192589b #worker-local
+    image: nebulastream/worker:video-demo #worker-local
 
   # audio source
   mic-stream:
@@ -116,8 +116,19 @@ services:
   #   command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/speech_recognition_audio.yml" ]
 
   # nebuli Alert Lab Values
+  audio-s2s:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - mic-stream
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/audio_s2s.yaml" ]
+  # nebuli Alert Lab Values
   lv-s2s:
-    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
+    image: nebulastream/nebuli:video-demo
     depends_on:
       - nes
       - mosquitto
@@ -129,7 +140,7 @@ services:
 
   # nebuli Patient Monitor Values
   pm-s2s:
-    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
+    image: nebulastream/nebuli:video-demo
     depends_on:
       - nes
       - mosquitto
@@ -141,7 +152,7 @@ services:
 
   # nebuli source-to-sink Lab Values
   lv-alert:
-    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
+    image: nebulastream/nebuli:video-demo
     depends_on:
       - nes
       - mosquitto
@@ -153,7 +164,7 @@ services:
 
   # nebuli Alert audio ingestion, Checks for word  "backward"
   audio-alert:
-    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
+    image: nebulastream/nebuli:video-demo
     depends_on:
       - nes
       - mosquitto
@@ -168,7 +179,7 @@ services:
     depends_on:
       - mosquitto
     ports:
-      - 3000:3000
+      - 3001:3000
   # mqtt-publisher:
   #   container_name: mqtt-publisher
   #   depends_on:
