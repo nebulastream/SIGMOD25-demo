@@ -1,5 +1,5 @@
 query: |
-  SELECT UINT32(3) AS alertType, timestamp, value FROM mqtt_source WHERE value > FLOAT64(50.0) INTO alert_sink
+  SELECT UINT32(3) AS alertType, timestamp, value FROM mqtt_source WHERE value > FLOAT64(7.5) INTO alert_sink
 sink:
   name: alert_sink
   type: MQTT
