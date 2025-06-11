@@ -150,6 +150,50 @@ services:
       - ./model:/model
     command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_ecg_s2s.yaml" ]
 
+  pm-hr-ards:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_hr_ards.yaml" ]
+
+  pm-hr-hpss:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_hr_hpss.yaml" ]
+
+  pm-spo2-ards:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_spo2_ards.yaml" ]
+
+  pm-spo2-hpss:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_spo2_hpss.yaml" ]
+
   # nebuli source-to-sink Lab Values
   lv-alert:
     image: nebulastream/nebuli:video-demo

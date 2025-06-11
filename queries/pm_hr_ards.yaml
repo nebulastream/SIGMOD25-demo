@@ -1,0 +1,30 @@
+query: |
+  SELECT * FROM pm_hr_ards_source INTO pm_hr_ards_sink
+sink:
+  name: pm_hr_ards_sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://mosquitto:1883
+    clientId: client_pm_hr_ards_sink
+    topic: sink/patient_monitor_hr_ards_sink
+    qos: 0
+logical:
+  - name: pm_hr_ards_source
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT64
+physical:
+  - logical: pm_hr_ards_source
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://mosquitto:1883
+      clientId: client_pm_hr_ards_source
+      topic: patientMonitorReplay/HR/ards
+      qos: 0

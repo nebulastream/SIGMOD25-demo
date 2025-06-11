@@ -13,3 +13,43 @@ ppg:
   port: 1883
   topic: patientMonitor/PPG
   period: 10 # milliseconds between publishes
+spo2_arsd:
+  broker: mosquitto
+  port: 1883
+  topic: patientMonitorReplay/SPO2/ards
+  period: 300 # milliseconds between publishes
+  start_epoch: 1735772400000   # reference timestamp in ms so generators are in sync
+  full_cycle_duration: 10000 # in ms
+  spo2_values: [ 98, 88 ] # normal and sick state
+  init_phase_duration: 3000 # ms time for how long the normal value will be held until the phase-over starts
+  phase_over_duration: 2000 # ms time for linear change from normal to sick state
+spo2_hpss:
+  broker: mosquitto
+  port: 1883
+  topic: patientMonitorReplay/SPO2/hpss
+  period: 300 # milliseconds between publishes
+  start_epoch: 1735772400000   # reference timestamp in ms so generators are in sync
+  full_cycle_duration: 10000 # in ms
+  spo2_values: [ 98, 90 ] # normal and sick state
+  init_phase_duration: 3000 # ms time for how long the normal value will be held until the phase-over starts
+  phase_over_duration: 2000 # ms time for linear change from normal to sick state
+hr_arsd:
+  broker: mosquitto
+  port: 1883
+  topic: patientMonitorReplay/HR/ards
+  period: 300 # milliseconds between publishes
+  start_epoch: 1735772400000 # reference timestamp in ms so generators are in sync
+  full_cycle_duration: 10000 # in ms
+  heart_rates: [ 80, 120 ] # normal and sick state
+  init_phase_duration: 3000 # ms time for how long the normal value will be held until the phase-over starts
+  phase_over_duration : 2000 # ms time for linear change from normal to sick state
+hr_hpss:
+  broker: mosquitto
+  port: 1883
+  topic: patientMonitorReplay/HR/hpss
+  period: 300 # milliseconds between publishes
+  start_epoch: 1735772400000 # reference timestamp in ms so generators are in sync
+  full_cycle_duration: 10000 # in ms
+  heart_rates: [ 80, 115 ] # normal and sick state
+  init_phase_duration: 3000 # ms time for how long the normal value will be held until the phase-over starts
+  phase_over_duration: 2000 # ms time for linear change from normal to sick state
