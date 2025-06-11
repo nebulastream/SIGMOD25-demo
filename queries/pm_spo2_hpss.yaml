@@ -1,0 +1,30 @@
+query: |
+  SELECT * FROM pm_spo2_hpss_source INTO pm_spo2_hpss_sink
+sink:
+  name: pm_spo2_hpss_sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://mosquitto:1883
+    clientId: client_pm_spo2_hpss_sink
+    topic: sink/patient_monitor_spo2_hpss_sink
+    qos: 0
+logical:
+  - name: pm_spo2_hpss_source
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT64
+physical:
+  - logical: pm_spo2_hpss_source
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://mosquitto:1883
+      clientId: client_pm_spo2_hpss_source
+      topic: patientMonitorReplay/SPO2/hpss
+      qos: 0
