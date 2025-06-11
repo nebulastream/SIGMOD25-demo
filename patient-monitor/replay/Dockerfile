@@ -28,7 +28,7 @@ CMD [ "sh", "-c", "\
      python ecg.py & \
      python ppg.py & \
      python abp.py & \
-     python spo2.py CONF=spo2_arsd & \
+     python spo2.py CONF=spo2_ards & \
      python spo2.py CONF=spo2_hpss & \
-     python heart_rate.py CONF=hr_arsd & \
+     python heart_rate.py CONF=hr_ards & \
      python heart_rate.py CONF=hr_hpss" ]

@@ -23,7 +23,7 @@ def interpolate(start, end, ratio):
 
 
 def main():
-    section = "hr_hpss"
+    section = ""
     for arg in sys.argv[1:]:
         if arg.startswith("CONF="):
             section = arg.split("=", 1)[1]
@@ -36,12 +36,12 @@ def main():
     BROKER_HOST = hr_cfg.get("broker", "localhost")
     BROKER_PORT = hr_cfg.get("port", 1883)
     TOPIC = hr_cfg.get("topic", "patientMonitorReplay/HR")
-    PUBLISH_PERIOD_MICROSECS = int(hr_cfg.get("period", 3_000_000))
+    PUBLISH_PERIOD_MICROSECS = int(hr_cfg.get("period", 0.3) * 1_000_000)
     START_EPOCH = int(hr_cfg.get("start_epoch", 1735772400000000))  # µs
-    CYCLE_DURATION_MICROSECS = int(hr_cfg.get("full_cycle_duration", 10_000_000))
+    CYCLE_DURATION_MICROSECS = int(hr_cfg.get("full_cycle_duration", 10) * 1_000_000)
     HEART_RATES = hr_cfg.get("heart_rates", [80, 120])
-    INIT_PHASE = int(hr_cfg.get("init_phase_duration", 3_000_000))
-    TRANSITION_PHASE = int(hr_cfg.get("phase_over_duration", 200_000_000))
+    INIT_PHASE = int(hr_cfg.get("init_phase_duration", 3) * 1_000_000)
+    TRANSITION_PHASE = int(hr_cfg.get("phase_over_duration", 2) * 1_000_000)
 
     if len(HEART_RATES) != 2:
         raise ValueError("heart_rates must contain exactly 2 values")
