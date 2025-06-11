@@ -7,7 +7,7 @@ sink:
   config:
     inputFormat: CSV
     serverURI: "mqtt://mosquitto:1883"
-    clientId: "patient_monitor_sink"
+    clientId: "patient_monitor_sink_spo2"
     topic: "sink/spo2"
     qos: 0
 
@@ -35,6 +35,6 @@ physical:
     sourceConfig:
       type: MQTT
       serverURI: mqtt://mosquitto:1883
-      clientId: patient_monitor_source
+      clientId: patient_monitor_source_spo2
       topic: patientMonitor/SPO2
       qos: 0

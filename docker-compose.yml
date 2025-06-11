@@ -33,7 +33,7 @@ services:
     container_name: nes
     healthcheck:
       test: [ "CMD-SHELL", "/bin/grpc_health_probe", '-addr', 'localhost:8080' ]
-    image: nebulastream/worker:video-demo #worker-local
+    image: nebulastream/worker:video-demo@sha256:6372167aba5742e90ddc3777b20d8ae47fa5fa6edac1a50f1fc6a4937192589b #worker-local
 
   # audio source
   mic-stream:
@@ -98,7 +98,7 @@ services:
 
   # nebuli Alert Lab Values
   lv-s2s:
-    image: nebulastream/nebuli:video-demo
+    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
     depends_on:
       - nes
       - mosquitto
@@ -110,7 +110,7 @@ services:
 
   # nebuli source-to-sink Lab Values
   lv-alert:
-    image: nebulastream/nebuli:video-demo
+    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
     depends_on:
       - nes
       - mosquitto
@@ -122,7 +122,7 @@ services:
 
   # nebuli Alert audio ingestion, Checks for word  "backward"
   audio-alert:
-    image: nebulastream/nebuli:video-demo
+    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
     depends_on:
       - nes
       - mosquitto
@@ -133,7 +133,7 @@ services:
     command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/audio_alert.yaml" ]
 
   nebuli-patient-monitor-spo2:
-    image: nebulastream/nebuli:video-demo
+    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
     volumes:
       - ./queries:/queries
     depends_on:
@@ -142,7 +142,7 @@ services:
     command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/patient_monitor_spo2.yaml" ]
 
   nebuli-patient-monitor-pls:
-    image: nebulastream/nebuli:video-demo
+    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
     volumes:
       - ./queries:/queries
     depends_on:
