@@ -1,5 +1,6 @@
 import sys
 import time
+import random
 import paho.mqtt.client as mqtt
 import yaml
 from pathlib import Path
@@ -14,7 +15,7 @@ def load_cfg(path: str | Path = "config.yml") -> dict:
 
 
 def on_connect(client, userdata, flags, rc, properties=None):
-    print("[\u2713] Connected" if rc == 0 else f"[!] Connection failed (rc={rc})")
+    print("[✓] Connected" if rc == 0 else f"[!] Connection failed (rc={rc})")
 
 
 def interpolate(start, end, ratio):
@@ -35,18 +36,19 @@ def main():
     BROKER_HOST = hr_cfg.get("broker", "localhost")
     BROKER_PORT = hr_cfg.get("port", 1883)
     TOPIC = hr_cfg.get("topic", "patientMonitorReplay/HR")
-    PUBLISH_PERIOD_MS = int(hr_cfg.get("period", 300))
-    START_EPOCH = int(hr_cfg.get("start_epoch"))  # ms
-    CYCLE_DURATION_MS = int(hr_cfg.get("full_cycle_duration", 10000))
+    PUBLISH_PERIOD_MICROSECS = int(hr_cfg.get("period", 3_000_000))
+    START_EPOCH = int(hr_cfg.get("start_epoch", 1735772400000000))  # µs
+    CYCLE_DURATION_MICROSECS = int(hr_cfg.get("full_cycle_duration", 10_000_000))
     HEART_RATES = hr_cfg.get("heart_rates", [80, 120])
-    INIT_PHASE = int(hr_cfg.get("init_phase_duration", 300))
-    TRANSITION_PHASE = int(hr_cfg.get("phase_over_duration", 200))
+    INIT_PHASE = int(hr_cfg.get("init_phase_duration", 3_000_000))
+    TRANSITION_PHASE = int(hr_cfg.get("phase_over_duration", 200_000_000))
 
     if len(HEART_RATES) != 2:
         raise ValueError("heart_rates must contain exactly 2 values")
 
     normal, sick = HEART_RATES
-    sick_phase = CYCLE_DURATION_MS - (INIT_PHASE + TRANSITION_PHASE * 2)
+    sick_phase = CYCLE_DURATION_MICROSECS - (INIT_PHASE + TRANSITION_PHASE * 2)
+    VARIATION = 1
 
     client = mqtt.Client()
     client.on_connect = on_connect
@@ -55,8 +57,8 @@ def main():
 
     try:
         while True:
-            now_ms = int(time.time() * 1000)
-            elapsed = (now_ms - START_EPOCH) % CYCLE_DURATION_MS
+            now_us = int(time.time() * 1_000_000)
+            elapsed = (now_us - START_EPOCH) % CYCLE_DURATION_MICROSECS
 
             if elapsed < INIT_PHASE:
                 value = normal
@@ -67,11 +69,14 @@ def main():
             else:
                 value = sick
 
-            msg = f"{now_ms},{value}|"
+            variation = random.randint(-VARIATION, VARIATION)
+            value = max(0, value + variation)
+
+            msg = f"{now_us},{value}|"
             client.publish(TOPIC, msg, qos=1)
 
-            next_tick_ms = START_EPOCH + ((now_ms - START_EPOCH) // PUBLISH_PERIOD_MS + 1) * PUBLISH_PERIOD_MS
-            sleep_time = max(0, (next_tick_ms - int(time.time() * 1000)) / 1000)
+            next_tick_us = START_EPOCH + ((now_us - START_EPOCH) // PUBLISH_PERIOD_MICROSECS + 1) * PUBLISH_PERIOD_MICROSECS
+            sleep_time = max(0, (next_tick_us - int(time.time() * 1_000_000)) / 1_000_000)
             time.sleep(sleep_time)
 
     except KeyboardInterrupt:
@@ -79,7 +84,6 @@ def main():
     finally:
         client.loop_stop()
         client.disconnect()
-
 
 
 if __name__ == "__main__":

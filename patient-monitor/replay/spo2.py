@@ -35,18 +35,18 @@ def main():
     BROKER_HOST = spo2_cfg.get("broker", "localhost")
     BROKER_PORT = spo2_cfg.get("port", 1883)
     TOPIC = spo2_cfg.get("topic", "patientMonitorReplay/SpO2")
-    PUBLISH_PERIOD_MS = int(spo2_cfg.get("period", 300))
-    START_EPOCH = int(spo2_cfg.get("start_epoch"))  # ms
-    CYCLE_DURATION_MS = int(spo2_cfg.get("full_cycle_duration", 10000))
+    PUBLISH_PERIOD_MICROSECS = int(spo2_cfg.get("period", 300_000))
+    START_EPOCH = int(spo2_cfg.get("start_epoch", 1735772400000000))  # microseconds
+    CYCLE_DURATION_MICROSECS = int(spo2_cfg.get("full_cycle_duration", 10_000_000))
     SPO2_VALUES = spo2_cfg.get("spo2_values", [98, 90])
-    INIT_PHASE = int(spo2_cfg.get("init_phase_duration", 300))
-    TRANSITION_PHASE = int(spo2_cfg.get("phase_over_duration", 200))
+    INIT_PHASE = int(spo2_cfg.get("init_phase_duration", 300_000_000))
+    TRANSITION_PHASE = int(spo2_cfg.get("phase_over_duration", 200_000_000))
 
     if len(SPO2_VALUES) != 2:
         raise ValueError("spo2_values must contain exactly 2 values")
 
     normal, sick = SPO2_VALUES
-    sick_phase = CYCLE_DURATION_MS - (INIT_PHASE + TRANSITION_PHASE)
+    sick_phase = CYCLE_DURATION_MICROSECS - (INIT_PHASE + TRANSITION_PHASE)
 
     client = mqtt.Client()
     client.on_connect = on_connect
@@ -55,8 +55,8 @@ def main():
 
     try:
         while True:
-            now_ms = int(time.time() * 1000)
-            elapsed = (now_ms - START_EPOCH) % CYCLE_DURATION_MS
+            now_ms = int(time.time() * 1_000_000)
+            elapsed = (now_ms - START_EPOCH) % CYCLE_DURATION_MICROSECS
 
             if elapsed < INIT_PHASE:
                 value = normal
@@ -69,8 +69,8 @@ def main():
             msg = f"{now_ms},{value}|"
             client.publish(TOPIC, msg, qos=1)
 
-            next_tick_ms = START_EPOCH + ((now_ms - START_EPOCH) // PUBLISH_PERIOD_MS + 1) * PUBLISH_PERIOD_MS
-            sleep_time = max(0, (next_tick_ms - int(time.time() * 1000)) / 1000)
+            next_tick_ms = START_EPOCH + ((now_ms - START_EPOCH) // PUBLISH_PERIOD_MICROSECS + 1) * PUBLISH_PERIOD_MICROSECS
+            sleep_time = max(0, (next_tick_ms - int(time.time() * 1_000_000)) / 1_000_000)
             time.sleep(sleep_time)
 
     except KeyboardInterrupt:
