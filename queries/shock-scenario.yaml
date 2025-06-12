@@ -1,0 +1,63 @@
+query: |
+  SELECT * FROM (
+    SELECT id, value, timestamp
+    FROM (
+      SELECT value2, timestamp, UINT32(1) as id
+      FROM sysbp_replay
+    )
+    JOIN (
+      SELECT id2, value2, timestamp
+      FROM (
+        SELECT value2, timestamp, UINT32(1) as id2
+        FROM hr_replay
+      )
+    ) ON id = id2
+    WINDOW TUMBLING (timestamp, size 2000000 ms)
+    WHERE (value2/value) > FLOAT32(1.0)
+  )
+  INTO csv_sink
+sink:
+  name: csv_sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://mosquitto:1883
+    clientId: iamaclient3
+    topic: alert
+    qos: 1
+logical:
+  - name: sysbp_replay
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT32
+  - name: hr_replay
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value2
+        type: FLOAT64
+physical:
+  - logical: sysbp_replay
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://mosquitto:1883
+      clientId: client_sysbp_replay
+      topic: source/lab_values
+      qos: 0
+  - logical: hr_replay
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://mosquitto:1883
+      clientId: client_hr_replay
+      topic: source/lab_values
+      qos: 0
