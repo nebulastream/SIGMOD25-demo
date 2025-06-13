@@ -11,7 +11,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY ecg.py ppg.py abp.py heart_rate.py spo2.py config.yml ./
+COPY ecg.py ppg.py abp.py value_generator.py config.yml ./
 
 # Rely on manylinux wheels for SciPy/numpy/etc.
 RUN pip install --no-cache-dir --upgrade pip \
@@ -28,7 +28,6 @@ CMD [ "sh", "-c", "\
      python ecg.py & \
      python ppg.py & \
      python abp.py & \
-     python spo2.py CONF=spo2_ards & \
-     python spo2.py CONF=spo2_hpss & \
-     python heart_rate.py CONF=hr_ards & \
-     python heart_rate.py CONF=hr_hpss" ]
+     python value_generator.py CONF=spo2_ards & \
+     python value_generator.py CONF=sbp_hpss & \
+     python value_generator.py CONF=hr_hpss" ]
