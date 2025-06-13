@@ -77,7 +77,7 @@ def run_generator(cfg: dict):
 
 
 def main():
-    section = "sbp_hpss"
+    section = ""
     for arg in sys.argv[1:]:
         if arg.startswith("CONF="):
             section = arg.split("=", 1)[1]
