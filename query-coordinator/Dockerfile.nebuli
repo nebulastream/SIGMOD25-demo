@@ -1,0 +1,9 @@
+ARG BASE_IMG=nebulastream/nebuli:video-demo
+
+FROM ${BASE_IMG}
+RUN apt update && apt install wget
+RUN GRPC_HEALTH_PROBE_VERSION=v0.4.13 && \
+  wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-$(dpkg --print-architecture) && \
+  chmod +x /bin/grpc_health_probe
+ADD query_coordinator.sh /usr/bin/query_coordinator.sh
+ENTRYPOINT ["/usr/bin/query_coordinator.sh"]

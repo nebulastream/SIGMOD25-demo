@@ -5,8 +5,8 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://mosquitto:1883
-    clientId: client_pm_source_ppg
+    serverURI: mqtt://192.168.1.102:1883
+    clientId: pm-ppg-s2s
     topic: sink/patient_monitor_ppg
     qos: 0
 logical:
@@ -24,7 +24,6 @@ physical:
       fieldDelimiter: ","
     sourceConfig:
       type: MQTT
-      serverURI: mqtt://mosquitto:1883
-      clientId: client_ppg_patient_monitor
+      serverURI: mqtt://192.168.1.102:1883
       topic: patientMonitor/PPG
       qos: 0

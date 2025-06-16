@@ -1,5 +1,6 @@
-#!/usr/bin/env sh
+#!/usr/bin/bash
 set -eu
+shopt -s nullglob
 
 NES_HOST="${NES_HOST:-nes:8080}"
 QUERY_DIR="${QUERY_DIR:-/queries}"
@@ -14,6 +15,8 @@ else
   set -- "$QUERY_DIR"/*.yml "$QUERY_DIR"/*.yaml
   files="$*"
 fi
+
+ls $QUERY_DIR
 
 [ -e "$(printf '%s\n' $files | head -n1)" ] || {
   echo "No query files found in $QUERY_DIR" >&2

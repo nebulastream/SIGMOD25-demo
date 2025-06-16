@@ -11,7 +11,6 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY ecg.py ppg.py abp.py config.yml ./
 
 # Rely on manylinux wheels for SciPy/numpy/etc.
 RUN pip install --no-cache-dir --upgrade pip \
@@ -22,6 +21,8 @@ RUN pip install --no-cache-dir --upgrade pip \
         PyYAML   \
         PyWavelets \
  && python -m pip cache purge   # keep the image tiny
+
+ COPY ecg.py ppg.py abp.py config.yml ./
 
 # ---- Runtime ----
 CMD [ "sh", "-c", "python ecg.py & python ppg.py & python abp.py" ]

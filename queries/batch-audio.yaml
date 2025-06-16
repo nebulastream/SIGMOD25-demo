@@ -1,0 +1,34 @@
+query: |
+  SELECT
+    ImageManipToBase64(chunked) as data
+  FROM ( 
+    SELECT COUNT(value) as samples, MERGE(value) as chunked
+    FROM audio_stream WINDOW SLIDING(timestamp, size 1000000 ms, advance by 20000 ms)
+  )
+  INTO csv_sink
+sink:
+  name: csv_sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://192.168.1.102:1883
+    clientId: batch-audio-client
+    topic: audio/batch-audio
+    qos: 1
+logical:
+  - name: audio_stream
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT32
+physical:
+  - logical: audio_stream
+    parserConfig:
+      type: Raw
+    sourceConfig:
+      type: Audio
+      socketPort: 1234
+      socketHost: localhost
+      sampleRate: 16000
+      sampleWidth: 2

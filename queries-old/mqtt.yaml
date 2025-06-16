@@ -5,8 +5,8 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://mosquitto:1883
-    clientId: i am a client2
+    serverURI: mqtt://192.168.1.102:1883
+    clientId: mqtt
     topic: test/messages2
     qos: 1
 logical:
@@ -24,8 +24,7 @@ physical:
       fieldDelimiter: ","
     sourceConfig:
       type: MQTT
-      serverURI: mqtt://mosquitto:1883
-      clientId: i am a client
+      serverURI: mqtt://192.168.1.102:1883
       topic: test/messages
       flushIntervalMS: 100
       qos: 1

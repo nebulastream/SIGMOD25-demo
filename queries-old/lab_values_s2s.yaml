@@ -1,0 +1,29 @@
+query: |
+  SELECT * FROM lb_source INTO lb_sink
+sink:
+  name: lb_sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://192.168.1.102:1883
+    clientId: lab-values-s2s
+    topic: sink/lab_values
+    qos: 0
+logical:
+  - name: lb_source
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT64
+physical:
+  - logical: lb_source
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://192.168.1.102:1883
+      topic: source/lab_values
+      qos: 0

@@ -1,15 +1,15 @@
 ecg:
-  broker: mosquitto
+  broker: 192.168.1.102
   port: 1883
   topic: patientMonitor/ECG
   period: 10 # milliseconds between publishes
 abp:
-  broker: mosquitto
+  broker: 192.168.1.102
   port: 1883
   topic: patientMonitor/ABP
   period: 10 # milliseconds between publishes
 ppg:
-  broker: mosquitto
+  broker: 192.168.1.102
   port: 1883
   topic: patientMonitor/PPG
   period: 10 # milliseconds between publishes

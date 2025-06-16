@@ -1,20 +1,20 @@
 hco3:
-  broker: mosquitto
+  broker: 192.168.1.102
   port: 1883
   topic: labValues/HCO3
   period: 10 # seconds between publishes
 natriumBG:
-  broker: mosquitto
+  broker: 192.168.1.102
   port: 1883
   topic: labValues/NatriumBG
   period: 12 # seconds between publishes
 pco2:
-  broker: mosquitto
+  broker: 192.168.1.102
   port: 1883
   topic: labValues/PCO2
   period: 15 # seconds between publishes
 ph:
-  broker: mosquitto
+  broker: 192.168.1.102
   port: 1883
   topic: source/lab_values #labValues/pH
   period: 7 # seconds between publishes

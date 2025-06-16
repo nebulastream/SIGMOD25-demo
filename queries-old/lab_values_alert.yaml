@@ -5,8 +5,8 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://mosquitto:1883
-    clientId: client_alert_two
+    serverURI: mqtt://192.168.1.102:1883
+    clientId: lab-values-alert
     topic: alert
     qos: 0
 logical:
@@ -24,7 +24,6 @@ physical:
       fieldDelimiter: ","
     sourceConfig:
       type: MQTT
-      serverURI: mqtt://mosquitto:1883
-      clientId: client_one_alert
+      serverURI: mqtt://192.168.1.102:1883
       topic: source/lab_values
       qos: 0

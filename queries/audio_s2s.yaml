@@ -5,8 +5,8 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://mosquitto:1883
-    clientId: iamaclient3326
+    serverURI: mqtt://192.168.1.102:1883
+    clientId: audio-s2s
     topic: sink/audio
     qos: 1
 logical:
@@ -23,6 +23,6 @@ physical:
     sourceConfig:
       type: Audio
       socketPort: 1234
-      socketHost: mic-stream
+      socketHost: localhost
       sampleRate: 16000
       sampleWidth: 2

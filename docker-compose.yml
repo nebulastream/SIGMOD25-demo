@@ -1,39 +1,5 @@
 services:
-
-  mosquitto:
-    image: eclipse-mosquitto:latest
-    container_name: mqtt-broker
-    healthcheck:
-      test: [ "CMD-SHELL", "mosquitto_pub", "-h", "localhost", "-p", "1883", "-n", "-t", "test", "--quiet" ]
-    ports:
-      - "1883:1883"
-      - "9001:9001"
-    command: |
-      sh -c '
-      cat > /mosquitto/config/mosquitto.conf <<EOF
-      persistence true
-      persistence_location /mosquitto/data/
-      log_dest file /mosquitto/log/mosquitto.log
-      log_type all
-
-      listener 1883
-      protocol mqtt
-      allow_anonymous true
-
-      listener 9001
-      protocol websockets
-      allow_anonymous true
-      EOF
-
-      mosquitto -c /mosquitto/config/mosquitto.conf
-      '
-
-  # nebulastream worker
-  nes:
-    container_name: nes
-    healthcheck:
-      test: [ "CMD-SHELL", "/bin/grpc_health_probe", '-addr', 'localhost:8080' ]
-    image: nebulastream/worker:video-demo #worker-local
+  # Worker has to run outside the docker container, as it requries access to the host network
 
   # audio source
   mic-stream:
@@ -78,9 +44,6 @@ services:
     container_name: pm-signal
     build:
       context: patient-monitor/replay
-    depends_on:
-      - nes
-      - mosquitto
       #image: patientMonitorReplay
 
   # lab values (replay)
@@ -88,68 +51,71 @@ services:
     container_name: lab-values
     build:
       context: lab-values/replay
-    depends_on:
-      - nes
-      - mosquitto
-  
-  dashboard:
-    image: nebulastream/needmi-demo-ui:latest
-    depends_on:
-      - mosquitto
-    ports:
-      - 3001:3000
-  # mqtt-publisher:
-  #   container_name: mqtt-publisher
-  #   depends_on:
-  #     - mosquitto
-  #   environment:
-  #     - MQTT_HOST=mosquitto
-  #     - MQTT_PORT=1883
-  #   build:
-  #     dockerfile_inline: |
-  #       FROM alpine:latest
-        
-  #       RUN apk add --no-cache mosquitto-clients bash
-        
-  #       # Create the publish script
-  #       RUN cat > /publish.sh <<'EOF'
-  #       #!/bin/bash
-  #       # MQTT broker settings
-  #       MQTT_HOST="$${MQTT_HOST:-mosquitto}"
-  #       MQTT_PORT="$${MQTT_PORT:-1883}"
-  #       MQTT_TOPIC="test/messages"
-        
-  #       # Function to publish messages
-  #       publish_message() {
-  #           local message="$$1"
-  #           mosquitto_pub -h $$MQTT_HOST -p $$MQTT_PORT -t $$MQTT_TOPIC -m "$$message"
-  #       }
-        
-  #       # Publish messages in a loop
-  #       sleep 5
-  #       counter=1
-  #       while true; do
-  #           sleep 0.1
-  #           publish_message "$$counter,$$counter|"
-  #           counter=$$((counter + 1))
-  #       done
-  #       EOF
-        
-  #       RUN chmod +x /publish.sh
-        
-  #       CMD ["/publish.sh"]
 
-  query-bootstrap:
+  # Queries:
+  audio-s2s:
     build:
-      context: queries
+      context: query-coordinator
       dockerfile: Dockerfile.nebuli
-    depends_on:
-      - nes
-      - mosquitto
-      - mic-stream
-      - pm-signal
+    extra_hosts:
+      - "nes:host-gateway"
     volumes:
       - ./queries:/queries
       - ./model:/model
-    environment:
-      NES_HOST: nes:8080
+    command: ["queries/audio_s2s.yaml"]
+
+  record-video:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: ["queries/record-video.yml"]
+
+  rgb-and-thermal:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: ["queries/rgb-and-thermal.yaml"]
+
+  speech-recognition:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: ["queries/speech_recognition_audio.yaml"]
+  
+  batch-audio:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: ["queries/batch-audio.yaml"]
+
+  thermal:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: ["queries/thermal.yaml"]
+
