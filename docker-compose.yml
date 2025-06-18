@@ -192,3 +192,20 @@ services:
 #      - ./model:/model
 #    command: ["queries/thermal.yaml"]
 
+
+  patient-monitor-start-request:
+    image: curlimages/curl:latest
+    volumes:
+      - ./patient-monitor/live/start_payload_generated.json:/start_payload_generated.json:ro
+    environment:
+      - JUMP_HOST=${JUMP_HOST}
+      - USB_DEV=${USB_DEV}
+    entrypoint: /bin/sh
+    command: >
+      -c '
+      curl -X POST http://$JUMP_HOST:5000/start-script \
+        -H "X-USB-DEV: $USB_DEV" \
+        -H "Content-Type: application/json" \
+        -d @/start_payload_generated.json
+      '
+      

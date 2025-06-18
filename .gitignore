@@ -1,2 +1,4 @@
 **/cookie
 .env
+.idea
+/patient-monitor/live/start_payload_generated.json

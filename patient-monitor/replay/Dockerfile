@@ -22,7 +22,13 @@ RUN pip install --no-cache-dir --upgrade pip \
         PyWavelets \
  && python -m pip cache purge   # keep the image tiny
 
- COPY ecg.py ppg.py abp.py config.yml ./
+COPY ecg.py ppg.py abp.py value_generator.py config.yml ./
 
 # ---- Runtime ----
-CMD [ "sh", "-c", "python ecg.py & python ppg.py & python abp.py" ]
+CMD [ "sh", "-c", "\
+     python ecg.py & \
+     python ppg.py & \
+     python abp.py & \
+     python value_generator.py CONF=spo2_ards & \
+     python value_generator.py CONF=sbp_hpss & \
+     python value_generator.py CONF=hr_hpss" ]

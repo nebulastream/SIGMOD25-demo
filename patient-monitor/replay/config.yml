@@ -13,3 +13,36 @@ ppg:
   port: 1883
   topic: source/live/patient_monitor_ppg
   period: 10 # milliseconds between publishes
+spo2_ards:
+  broker: mosquitto
+  port: 1883
+  topic: patientMonitorReplay/SPO2/ards
+  period: 0.3 # seconds between publishes
+  start_epoch: 1735772400000000   # timestamp (in microseconds) at which the generation starts
+  full_cycle_duration: 15 # in seconds
+  values: [ 99, 89 ] # normal and sick state
+  init_phase_duration: 3 # seconds time for how long the normal value will be held until the phase-over starts
+  phase_over_duration: 3 # seconds time for linear change from normal to sick state
+  variation: 0
+hr_hpss:
+  broker: mosquitto
+  port: 1883
+  topic: patientMonitorReplay/HR/hpss
+  period: 0.3 # seconds between publishes
+  start_epoch: 1735772400000000 # timestamp (in microseconds) at which the generation starts
+  full_cycle_duration: 15 # in seconds
+  values: [ 80, 115 ] # normal and sick state
+  init_phase_duration: 3 # seconds time for how long the normal value will be held until the phase-over starts
+  phase_over_duration: 3 # seconds time for linear change from normal to sick state
+  variation: 1
+sbp_hpss:
+  broker: mosquitto
+  port: 1883
+  topic: patientMonitorReplay/SBP/hpss
+  period: 0.3 # seconds between publishes
+  start_epoch: 1735772400000000 # timestamp (in microseconds) at which the generation starts
+  full_cycle_duration: 15 # in seconds
+  values: [ 120, 65 ] # normal and sick state
+  init_phase_duration: 4 # seconds time for how long the normal value will be held until the phase-over starts
+  phase_over_duration: 3 # seconds time for linear change from normal to sick state
+  variation: 3
