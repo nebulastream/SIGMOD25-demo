@@ -1,0 +1,40 @@
+query: |
+  SELECT * FROM pls_source INTO pls_sink
+
+sink:
+  name: pls_sink
+  type: MQTT
+  config:
+    inputFormat: CSV
+    serverURI: "mqtt://mosquitto:1883"
+    clientId: "patient_monitor_sink_pls"
+    topic: "sink/pls"
+    qos: 0
+
+#sink:
+#  name: pls_sink
+#  type: File
+#  config:
+#    inputFormat: CSV
+#    filePath: "sink-spo2.csv"
+#    append: false
+
+logical:
+  - name: pls_source
+    schema:
+      - name: ts_spo2
+        type: FLOAT64
+      - name: value_spo2
+        type: UINT64
+physical:
+  - logical: pls_source
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://mosquitto:1883
+      clientId: patient_monitor_source_pls
+      topic: patientMonitor/PLS
+      qos: 0
