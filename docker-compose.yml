@@ -1,47 +1,13 @@
 services:
-
-  mosquitto:
-    image: eclipse-mosquitto:latest
-    container_name: mqtt-broker
-    healthcheck:
-      test: [ "CMD-SHELL", "mosquitto_pub", "-h", "localhost", "-p", "1883", "-n", "-t", "test", "--quiet" ]
-    ports:
-      - "1883:1883"
-      - "9001:9001"
-    command: |
-      sh -c '
-      cat > /mosquitto/config/mosquitto.conf <<EOF
-      persistence true
-      persistence_location /mosquitto/data/
-      log_dest file /mosquitto/log/mosquitto.log
-      log_type all
-
-      listener 1883
-      protocol mqtt
-      allow_anonymous true
-
-      listener 9001
-      protocol websockets
-      allow_anonymous true
-      EOF
-
-      mosquitto -c /mosquitto/config/mosquitto.conf
-      '
-
-  # nebulastream worker
-  nes:
-    container_name: nes
-    healthcheck:
-      test: [ "CMD-SHELL", "/bin/grpc_health_probe", '-addr', 'localhost:8080' ]
-    image: nebulastream/worker:video-demo@sha256:6372167aba5742e90ddc3777b20d8ae47fa5fa6edac1a50f1fc6a4937192589b #worker-local
+  # Worker has to run outside the docker container, as it requries access to the host network
 
   # audio source
   mic-stream:
     build:
       context: mic-server
       args:
-        HOST_UID: ${HOST_UID}
-        HOST_GID: ${HOST_GID}
+        HOST_UID: 1000 #${HOST_UID}
+        HOST_GID: 1000 #${HOST_GID}
 
     # run as your host user so you can access the socket:
     user: "${HOST_UID}:${HOST_GID}"
@@ -63,7 +29,7 @@ services:
       PULSE_SERVER: unix:/run/pulse/native
 
       # pick up the discovered mic source:
-      SOURCE: ${PULSE_SOURCE}
+      SOURCE: "alsa_input.usb-AKM_AK5370-00.mono-fallback" #${PULSE_SOURCE}
 
       # for faster data ingestion
       PULSE_LATENCY_MSEC: "20"
@@ -78,9 +44,6 @@ services:
     container_name: pm-signal
     build:
       context: patient-monitor/replay
-    depends_on:
-      - nes
-      - mosquitto
       #image: patientMonitorReplay
 
   # lab values (replay)
@@ -88,189 +51,147 @@ services:
     container_name: lab-values
     build:
       context: lab-values/replay
+
+ # Queries:
+
+  # multimodal query (live - experimental)
+  multimodal-query-1:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
     depends_on:
-      - nes
-      - mosquitto
-
-  # # nebuli for mqtt bypass (source to sink)
-  # nebuli:
-  #   image: nebulastream/nebuli:video-demo
-  #   depends_on:
-  #     - nes
-  #     - mosquitto
-  #   volumes:
-  #     - ./queries:/queries
-  #     - ./model:/model
-  #   command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/mqtt.yaml" ]
-
-  # nebuli for audio ingestion
-  # audio-query:
-  #   image: nebulastream/nebuli:video-demo
-  #   depends_on:
-  #     - nes
-  #     - mosquitto
-  #     - mic-stream
-  #   volumes:
-  #     - ./queries:/queries
-  #     - ./model:/model
-  #   command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/speech_recognition_audio.yml" ]
-
-  # nebuli Alert Lab Values
-  audio-s2s:
-    image: nebulastream/nebuli:video-demo
-    depends_on:
-      - nes
-      - mosquitto
-      - mic-stream
+      - audio-s2s
     volumes:
       - ./queries:/queries
       - ./model:/model
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/audio_s2s.yaml" ]
-  # nebuli Alert Lab Values
-  lv-s2s:
-    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
+    command: [ "queries/multimodal-1.yaml" ]
+
+  # nebuli Lab Values
+  lab-values:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
     depends_on:
-      - nes
-      - mosquitto
-      - mic-stream
+      - lab-values-replay
+    extra_hosts:
+      - "nes:host-gateway"
     volumes:
       - ./queries:/queries
       - ./model:/model
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/lab_values_s2s.yaml" ]
+    command: [ "queries/lab_values_s2s.yaml" ]
 
   # nebuli Patient Monitor Values
-  pm-s2s:
-    image: nebulastream/nebuli:video-demo
+  pm-s2s-ecg:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
     depends_on:
-      - nes
-      - mosquitto
       - pm-signal
     volumes:
       - ./queries:/queries
       - ./model:/model
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_ecg_s2s.yaml" ]
+    command: [ "queries/pm_ecg_s2s.yaml" ]
 
-  pm-hr-hpss:
-    image: nebulastream/nebuli:video-demo
+  pm-s2s-abp:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
     depends_on:
-      - nes
-      - mosquitto
       - pm-signal
     volumes:
       - ./queries:/queries
       - ./model:/model
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_hr_hpss.yaml" ]
+    command: [ "queries/pm_abp_s2s.yaml" ]
 
-  pm-spo2-ards:
-    image: nebulastream/nebuli:video-demo
+  pm-s2s-ppg:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
     depends_on:
-      - nes
-      - mosquitto
       - pm-signal
     volumes:
       - ./queries:/queries
       - ./model:/model
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_spo2_ards.yaml" ]
+    command: [ "queries/pm_ppg_s2s.yaml" ]
 
-  pm-sbp-hpss:
-    image: nebulastream/nebuli:video-demo
+  audio-s2s:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
     depends_on:
-      - nes
-      - mosquitto
-      - pm-signal
-    volumes:
-      - ./queries:/queries
-      - ./model:/model
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_sbp_hpss.yaml" ]
-
-  # nebuli source-to-sink Lab Values
-  lv-alert:
-    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
-    depends_on:
-      - nes
-      - mosquitto
       - mic-stream
+    extra_hosts:
+      - "nes:host-gateway"
     volumes:
       - ./queries:/queries
       - ./model:/model
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/lab_values_alert.yaml" ]
+    command: ["queries/audio_s2s.yaml"]
 
-  # nebuli Alert audio ingestion, Checks for word  "backward"
-  audio-alert:
-    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
+#  record-video:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: ["queries/record-video.yml"]
+
+  rgb-and-thermal:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: ["queries/rgb-and-thermal.yaml"]
+
+  speech-recognition:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
     depends_on:
-      - nes
-      - mosquitto
       - mic-stream
+    extra_hosts:
+      - "nes:host-gateway"
     volumes:
       - ./queries:/queries
       - ./model:/model
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/audio_alert.yaml" ]
+    command: ["queries/speech_recognition_audio.yaml"]
 
-  nebuli-patient-monitor-spo2:
-    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
-    volumes:
-      - ./queries:/queries
-    depends_on:
-      - nes
-      - mosquitto
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/patient_monitor_spo2.yaml" ]
+#  batch-audio:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: ["queries/batch-audio.yaml"]
 
-  nebuli-patient-monitor-pls:
-    image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
-    volumes:
-      - ./queries:/queries
-    depends_on:
-      - nes
-      - mosquitto
-    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/patient_monitor_pls.yaml" ]
-  
-  dashboard:
-    image: nebulastream/needmi-demo-ui:latest
-    depends_on:
-      - mosquitto
-    ports:
-      - 3001:3000
-  # mqtt-publisher:
-  #   container_name: mqtt-publisher
-  #   depends_on:
-  #     - mosquitto
-  #   environment:
-  #     - MQTT_HOST=mosquitto
-  #     - MQTT_PORT=1883
-  #   build:
-  #     dockerfile_inline: |
-  #       FROM alpine:latest
-        
-  #       RUN apk add --no-cache mosquitto-clients bash
-        
-  #       # Create the publish script
-  #       RUN cat > /publish.sh <<'EOF'
-  #       #!/bin/bash
-  #       # MQTT broker settings
-  #       MQTT_HOST="$${MQTT_HOST:-mosquitto}"
-  #       MQTT_PORT="$${MQTT_PORT:-1883}"
-  #       MQTT_TOPIC="test/messages"
-        
-  #       # Function to publish messages
-  #       publish_message() {
-  #           local message="$$1"
-  #           mosquitto_pub -h $$MQTT_HOST -p $$MQTT_PORT -t $$MQTT_TOPIC -m "$$message"
-  #       }
-        
-  #       # Publish messages in a loop
-  #       sleep 5
-  #       counter=1
-  #       while true; do
-  #           sleep 0.1
-  #           publish_message "$$counter,$$counter|"
-  #           counter=$$((counter + 1))
-  #       done
-  #       EOF
-        
-  #       RUN chmod +x /publish.sh
-        
-  #       CMD ["/publish.sh"]
+#  thermal:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: ["queries/thermal.yaml"]
+
 
   patient-monitor-start-request:
     image: curlimages/curl:latest
@@ -287,3 +208,4 @@ services:
         -H "Content-Type: application/json" \
         -d @/start_payload_generated.json
       '
+      

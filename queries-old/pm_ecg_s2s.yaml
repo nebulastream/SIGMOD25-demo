@@ -1,0 +1,29 @@
+query: |
+  SELECT * FROM pm_ecg_source INTO pm_ecg_sink
+sink:
+  name: pm_ecg_sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://192.168.1.104:1883
+    clientId: pm-ecg-s2s
+    topic: sink/live/patient_monitor_ecg
+    qos: 0
+logical:
+  - name: pm_ecg_source
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT64
+physical:
+  - logical: pm_ecg_source
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://192.168.1.104:1883
+      topic: source/live/patient_monitor_ecg
+      qos: 0

@@ -1,0 +1,74 @@
+query: |
+  SELECT * FROM (
+  SELECT id, alertType, timestamp
+  FROM (
+  SELECT UINT32(1) AS alertType, start as timestamp, UINT32(1) AS id
+  FROM (
+  SELECT start, end, label, COUNT(label) as freq
+  FROM (
+      SELECT start, end, label
+      FROM (
+        SELECT start, end, SpeechRecognitionLabel(ArgMax(output)) as label, MaxValue(output), INFER_MODEL(speech_recognition, (chunked))
+        FROM (
+          SELECT COUNT(value) as samples, MERGE(value) as chunked
+          FROM audio_stream WINDOW SLIDING(timestamp, size 1000000 ms, advance by 20000 ms)
+        )
+      )
+      WHERE label = VARSIZED("nine")
+  )
+  WINDOW TUMBLING(start, size 1000000 ms)
+  HAVING freq > UINT32(5)
+  )
+  )
+  INTO csv_sink
+sink:
+  name: sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://192.168.1.104:1883
+    clientId: speech-recognition-audio
+    topic: sink/live/alert
+    qos: 1
+logical:
+  - name: audio_stream
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT32
+  - name: lab_values
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT64
+physical:
+  - logical: audio_stream
+    parserConfig:
+      type: Raw
+    sourceConfig:
+      type: Audio
+      socketPort: 1234
+      socketHost: localhost
+      sampleRate: 16000
+      sampleWidth: 2
+  - logical: lab_values
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://192.168.1.104:1883
+      topic: source/live/lab_values
+      qos: 1
+models:
+  - path: model/audio_model.onnx
+#  - path: /model/audio_model.onnx
+    name: speech_recognition
+    inputs:
+      - VARSIZED
+    outputs:
+      - name: output
+        type: VARSIZED

@@ -1,0 +1,126 @@
+# Regarding Magic Numbers:
+# PixelFormat is based on aravis `arvenum.h`
+# 0x01100007 (17825799) represents MONO16 (gray)
+# 0x2100032 (34603058) represents YUV_422_YUYV (color)
+
+# We are currently not sure what the values returned by the thermal camera mean,
+# from empirical experiments we figured that values of around 8k represent around 80°C and values of around 4000 represent
+# 0°C. Granted during our experiments the camera was calibrated from -20°C to 80°C
+
+# The following query aligns the RGB and Thermal stream into a single stream. Using the interleaved mode of the Video
+# stream, we receive around 18FPS of the RGB and 9 FPS of Thermal.
+# Based on the RGB images, we do face detection and use the returned rectangle to calculate an average temperature.
+
+query: |
+  SELECT
+      ts,
+      image,
+      max_temp
+  FROM (
+      SELECT
+          ts,
+          ImageManipToBase64(
+              ImageManipYUYVToJPG(
+                  ImageManipDrawRectangle(rgb, face), 
+                  width, 
+                  height
+              )
+          ) as image,
+          ImageManipMono16ToCelsius(
+              ImageManipMono16MAX(
+                  ImageManipMono16ROI(
+                      thermal, 
+                      thermal_width, 
+                      thermal_height, 
+                      face
+                  )
+              )
+          ) as max_temp
+      FROM (
+          SELECT
+              *,
+              ImageManipFaceDetection(rgb, width, height) as face
+          FROM (
+              SELECT
+                  end as ts,
+                  timestamp as ots,
+                  width as thermal_width,
+                  height as thermal_height,
+                  image as thermal
+              FROM (
+                  SELECT
+                      LAST(image) as image,
+                      LAST(width) as width,
+                      LAST(height) as height,
+                      LAST(timestamp) as timestamp,
+                      LAST(pixelFormat) as pf
+                  FROM (
+                      SELECT
+                          image,
+                          width,
+                          height,
+                          timestamp,
+                          pixelFormat
+                      FROM video
+                      WHERE pixelFormat == UINT64(17825799)
+                  ) WINDOW TUMBLING(timestamp, size 250000000 ms)
+              )
+          ) INNER JOIN (
+              SELECT
+                  end,
+                  timestamp as ots,
+                  width,
+                  height,
+                  image as rgb
+              FROM (
+                  SELECT
+                      LAST(image) as image,
+                      LAST(width) as width,
+                      LAST(height) as height,
+                      LAST(timestamp) as timestamp,
+                      LAST(pixelFormat) as pf
+                  FROM (
+                      SELECT
+                          image,
+                          width,
+                          height,
+                          timestamp,
+                          pixelFormat
+                      FROM video
+                      WHERE pixelFormat == UINT64(34603058)
+                  ) WINDOW TUMBLING(timestamp, size 250000000 ms)
+              )
+          ) ON ts = end 
+          WINDOW TUMBLING(ots, size 250000000 ms)
+      )
+  )
+  INTO mqtt
+sink:
+  name: mqtt
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://192.168.1.104:1883
+    clientId: rgb-and-thermal
+    topic: test/thermal-rgb-image
+    qos: 1
+logical:
+  - name: video
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: width
+        type: UINT64
+      - name: height
+        type: UINT64
+      - name: pixelFormat
+        type: UINT64
+      - name: image
+        type: VARSIZED
+physical:
+  - logical: video
+    parserConfig:
+      type: Raw
+    sourceConfig:
+      type: Video
+      sourceSelector: 2

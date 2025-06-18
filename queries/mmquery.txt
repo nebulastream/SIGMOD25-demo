@@ -1,0 +1,32 @@
+  SELECT * FROM (
+  SELECT id, alertType, timestamp
+  FROM (
+  SELECT UINT32(1) AS alertType, start as timestamp, UINT32(1) AS id
+  FROM (
+  SELECT start, end, label, COUNT(label) as freq
+    FROM (
+      SELECT start, end, label
+      FROM (
+        SELECT start, end, SpeechRecognitionLabel(ArgMax(output)) as label, MaxValue(output), INFER_MODEL(speech_recognition, (chunked))
+        FROM (
+          SELECT COUNT(value) as samples, MERGE(value) as chunked
+          FROM audio_stream WINDOW SLIDING(timestamp, size 1000000 ms, advance by 20000 ms)
+        )
+      )
+    WHERE label = VARSIZED("nine")
+    )
+  WINDOW TUMBLING(start, size 1000000 ms)
+  HAVING freq > UINT32(5)
+  )
+  )
+  JOIN (
+  SELECT id2, value2, timestamp
+  FROM (
+  SELECT value2, timestamp, UINT32(1) as id2
+  FROM lab_values
+  WHERE value2 > FLOAT32(5.0)
+  )
+  ) ON id = id2
+  WINDOW TUMBLING (timestamp, size 2000000 ms)
+  )
+  INTO csv_sink

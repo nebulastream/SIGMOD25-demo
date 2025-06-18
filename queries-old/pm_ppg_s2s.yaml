@@ -1,0 +1,29 @@
+query: |
+  SELECT * FROM pm_ppg_source INTO pm_ppg_sink
+sink:
+  name: pm_ppg_sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://192.168.1.104:1883
+    clientId: pm-ppg-s2s
+    topic: sink/patient_monitor_ppg
+    qos: 0
+logical:
+  - name: pm_ppg_source
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT64
+physical:
+  - logical: pm_ppg_source
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://192.168.1.104:1883
+      topic: patientMonitor/PPG
+      qos: 0

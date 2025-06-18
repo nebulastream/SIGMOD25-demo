@@ -1,0 +1,6 @@
+FROM nebulastream/nebuli:video-demo
+
+COPY register-all-queries.sh /register-all-queries.sh
+RUN chmod +x /register-all-queries.sh
+
+ENTRYPOINT ["/register-all-queries.sh"]

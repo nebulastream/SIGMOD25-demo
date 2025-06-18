@@ -39,7 +39,7 @@ def main() -> None:
 
   BROKER_HOST    = ecg_cfg.get("broker", "localhost")
   BROKER_PORT    = ecg_cfg.get("port", 1882)
-  TOPIC          = ecg_cfg.get("topic", "patientMonitor/ECG")
+  TOPIC          = ecg_cfg.get("topic", "sink/live/patient_monitor_ecg_value")
   PUBLISH_PERIOD = ecg_cfg.get("period", 30) # in ms
 
   data = generate_data()

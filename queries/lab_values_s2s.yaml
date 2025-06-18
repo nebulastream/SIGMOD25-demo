@@ -5,15 +5,17 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://mosquitto:1883
-    clientId: client_lb_source
-    topic: sink/lab_values
+    serverURI: mqtt://192.168.1.104:1883
+    clientId: lab-values-s2s
+    topic: sink/live/lab_values
     qos: 0
 logical:
   - name: lb_source
     schema:
       - name: timestamp
         type: UINT64
+      - name: biosignal
+        type: VARSIZED
       - name: value
         type: FLOAT64
 physical:
@@ -24,7 +26,6 @@ physical:
       fieldDelimiter: ","
     sourceConfig:
       type: MQTT
-      serverURI: mqtt://mosquitto:1883
-      clientId: client_one_lab_values
-      topic: source/lab_values
+      serverURI: mqtt://192.168.1.104:1883
+      topic: source/live/lab_values
       qos: 0

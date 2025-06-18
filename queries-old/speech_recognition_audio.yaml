@@ -14,8 +14,8 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://mosquitto:1883
-    clientId: i am a client3
+    serverURI: mqtt://192.168.1.104:1883
+    clientId: speech-recognition-audio
     topic: test/messages3
     qos: 1
 logical:
@@ -32,7 +32,7 @@ physical:
     sourceConfig:
       type: Audio
       socketPort: 1234
-      socketHost: mic-stream
+      socketHost: localhost
       sampleRate: 16000
       sampleWidth: 2
 models:

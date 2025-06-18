@@ -1,0 +1,35 @@
+query: |
+  SELECT 
+    timestamp,
+    width,
+    height,
+    pixelFormat,
+    ImageManipSerialize(image, width, height, pixelFormat) as image
+  FROM video 
+  INTO mqtt
+sink:
+  name: mqtt
+  type: File
+  config:
+    inputFormat: CSV
+    filePath: output.csv
+logical:
+  - name: video
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: width
+        type: UINT64
+      - name: height
+        type: UINT64
+      - name: pixelFormat
+        type: UINT64
+      - name: image
+        type: VARSIZED
+physical:
+  - logical: video
+    parserConfig:
+      type: Raw
+    sourceConfig:
+      type: Video
+      sourceSelector: 2

@@ -5,10 +5,10 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://mosquitto:1883
-    clientId: client_pm_source_ecg
-    topic: sink/patient_monitor_ecg
-    qos: 0
+    serverURI: mqtt://192.168.1.104:1883
+    clientId: pm-ecg-s2s
+    topic: sink/live/patient_monitor_ecg
+    qos: 1
 logical:
   - name: pm_ecg_source
     schema:
@@ -24,7 +24,6 @@ physical:
       fieldDelimiter: ","
     sourceConfig:
       type: MQTT
-      serverURI: mqtt://mosquitto:1883
-      clientId: client_ecg_patient_monitor
-      topic: patientMonitor/ECG
-      qos: 0
+      serverURI: mqtt://192.168.1.104:1883
+      topic: source/live/patient_monitor_ecg
+      qos: 1

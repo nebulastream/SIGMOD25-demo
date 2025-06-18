@@ -1,0 +1,54 @@
+# PixelFormat is based on aravis `arvenum.h`
+# 0x01100007 (17825799) represents MONO16 (gray)
+# 0x2100032 (34603058) represents YUV_422_YUYV (color)
+query: |
+    SELECT
+      timestamp,
+      ImageManipToBase64(ImageManipYUYVToJPG(ImageManipDrawRectangle(rgb, face), width, height)) as image
+    FROM (
+      SELECT
+        rgb,
+        width,
+        height,
+        ImageManipFaceDetection(rgb, width, height) as face,
+        timestamp
+      FROM (
+        SELECT 
+          image as rgb,
+          width,
+          height,
+          timestamp
+        FROM video
+        WHERE pixelFormat == UINT64(34603058) 
+      )
+    )
+    INTO mqtt
+sink:
+  name: mqtt
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://192.168.1.104:1883
+    clientId: rgb-facedetect
+    topic: test/rgb-image
+    qos: 1
+logical:
+  - name: video
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: width
+        type: UINT64
+      - name: height
+        type: UINT64
+      - name: pixelFormat
+        type: UINT64
+      - name: image
+        type: VARSIZED
+physical:
+  - logical: video
+    parserConfig:
+      type: Raw
+    sourceConfig:
+      type: Video
+      sourceSelector: 2
