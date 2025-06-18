@@ -73,6 +73,25 @@ services:
        sh -c "parec --format=s16le --rate=16000 --channels=1 --device=$$SOURCE |
              socat -u - TCP-LISTEN:1234,reuseaddr,fork"
 
+  # patient monitor ECG signal (replay)
+  pm-signal:
+    container_name: pm-signal
+    build:
+      context: patient-monitor/replay
+    depends_on:
+      - nes
+      - mosquitto
+      #image: patientMonitorReplay
+
+  # lab values (replay)
+  lab-values-replay:
+    container_name: lab-values
+    build:
+      context: lab-values/replay
+    depends_on:
+      - nes
+      - mosquitto
+
   # # nebuli for mqtt bypass (source to sink)
   # nebuli:
   #   image: nebulastream/nebuli:video-demo
@@ -97,6 +116,17 @@ services:
   #   command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/speech_recognition_audio.yml" ]
 
   # nebuli Alert Lab Values
+  audio-s2s:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - mic-stream
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/audio_s2s.yaml" ]
+  # nebuli Alert Lab Values
   lv-s2s:
     image: nebulastream/nebuli:video-demo@sha256:e6916040b27778c6e090cb5bdb119af330e04b8bc880cad40fc5c275443e4233
     depends_on:
@@ -107,6 +137,51 @@ services:
       - ./queries:/queries
       - ./model:/model
     command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/lab_values_s2s.yaml" ]
+
+  # nebuli Patient Monitor Values
+  pm-s2s:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_ecg_s2s.yaml" ]
+
+  pm-hr-hpss:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_hr_hpss.yaml" ]
+
+  pm-spo2-ards:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_spo2_ards.yaml" ]
+
+  pm-sbp-hpss:
+    image: nebulastream/nebuli:video-demo
+    depends_on:
+      - nes
+      - mosquitto
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/pm_sbp_hpss.yaml" ]
 
   # nebuli source-to-sink Lab Values
   lv-alert:
@@ -151,11 +226,11 @@ services:
     command: [ "register", "-s", "nes:8080", "-x", "-i", "queries/patient_monitor_pls.yaml" ]
   
   dashboard:
-    image: nebulastream/needmi-demo-ui:v0.0.2
+    image: nebulastream/needmi-demo-ui:latest
     depends_on:
       - mosquitto
     ports:
-      - 3000:3000
+      - 3001:3000
   # mqtt-publisher:
   #   container_name: mqtt-publisher
   #   depends_on:
