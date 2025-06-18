@@ -6,8 +6,8 @@ services:
     build:
       context: mic-server
       args:
-        HOST_UID: ${HOST_UID}
-        HOST_GID: ${HOST_GID}
+        HOST_UID: 1000 #${HOST_UID}
+        HOST_GID: 1000 #${HOST_GID}
 
     # run as your host user so you can access the socket:
     user: "${HOST_UID}:${HOST_GID}"
@@ -29,7 +29,7 @@ services:
       PULSE_SERVER: unix:/run/pulse/native
 
       # pick up the discovered mic source:
-      SOURCE: ${PULSE_SOURCE}
+      SOURCE: "alsa_input.usb-AKM_AK5370-00.mono-fallback" #${PULSE_SOURCE}
 
       # for faster data ingestion
       PULSE_LATENCY_MSEC: "20"
@@ -52,11 +52,82 @@ services:
     build:
       context: lab-values/replay
 
-  # Queries:
+ # Queries:
+
+  # multimodal query (live - experimental)
+  multimodal-query-1:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - audio-s2s
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/multimodal-1.yaml" ]
+
+  # nebuli Lab Values
+  lab-values:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    depends_on:
+      - lab-values-replay
+    extra_hosts:
+      - "nes:host-gateway"
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/lab_values_s2s.yaml" ]
+
+  # nebuli Patient Monitor Values
+  pm-s2s-ecg:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_ecg_s2s.yaml" ]
+
+  pm-s2s-abp:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_abp_s2s.yaml" ]
+
+  pm-s2s-ppg:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_ppg_s2s.yaml" ]
+
   audio-s2s:
     build:
       context: query-coordinator
       dockerfile: Dockerfile.nebuli
+    depends_on:
+      - mic-stream
     extra_hosts:
       - "nes:host-gateway"
     volumes:
@@ -64,16 +135,16 @@ services:
       - ./model:/model
     command: ["queries/audio_s2s.yaml"]
 
-  record-video:
-    build:
-      context: query-coordinator
-      dockerfile: Dockerfile.nebuli
-    extra_hosts:
-      - "nes:host-gateway"
-    volumes:
-      - ./queries:/queries
-      - ./model:/model
-    command: ["queries/record-video.yml"]
+#  record-video:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: ["queries/record-video.yml"]
 
   rgb-and-thermal:
     build:
@@ -90,32 +161,34 @@ services:
     build:
       context: query-coordinator
       dockerfile: Dockerfile.nebuli
+    depends_on:
+      - mic-stream
     extra_hosts:
       - "nes:host-gateway"
     volumes:
       - ./queries:/queries
       - ./model:/model
     command: ["queries/speech_recognition_audio.yaml"]
-  
-  batch-audio:
-    build:
-      context: query-coordinator
-      dockerfile: Dockerfile.nebuli
-    extra_hosts:
-      - "nes:host-gateway"
-    volumes:
-      - ./queries:/queries
-      - ./model:/model
-    command: ["queries/batch-audio.yaml"]
 
-  thermal:
-    build:
-      context: query-coordinator
-      dockerfile: Dockerfile.nebuli
-    extra_hosts:
-      - "nes:host-gateway"
-    volumes:
-      - ./queries:/queries
-      - ./model:/model
-    command: ["queries/thermal.yaml"]
+#  batch-audio:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: ["queries/batch-audio.yaml"]
+
+#  thermal:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: ["queries/thermal.yaml"]
 

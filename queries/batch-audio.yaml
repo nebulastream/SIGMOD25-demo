@@ -11,7 +11,7 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://192.168.1.102:1883
+    serverURI: mqtt://192.168.1.104:1883
     clientId: batch-audio-client
     topic: audio/batch-audio
     qos: 1

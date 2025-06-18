@@ -3,20 +3,27 @@
 # 0x2100032 (34603058) represents YUV_422_YUYV (color)
 query: |
   SELECT
-    timestamp,
-    ImageManipMono16MIN(image) as min_value,
-    ImageManipMono16Max(image) as max_value,
-    ImageManipToBase64(ImageManipMono8ToJPG(ImageManipMono16ToMono8(image, width, height, min_value, max_value), width, height)) as image  
-  FROM video
-  WHERE 
-    pixelFormat == UINT64(17825799) 
+    image,
+    ImageManipMono16ToCelsius(min_value) as min_value,
+    ImageManipMono16ToCelsius(max_value) as max_value,
+    timestamp as img_timestamp
+  FROM (
+    SELECT
+      timestamp,
+      ImageManipMono16MIN(image) as min_value,
+      ImageManipMono16Max(image) as max_value,
+      ImageManipToBase64(ImageManipMono8ToJPG(ImageManipMono16ToMono8(image, width, height, min_value, max_value), width, height)) as image
+    FROM video
+    WHERE 
+      pixelFormat == UINT64(17825799)
+  )     
   INTO mqtt
 sink:
   name: mqtt
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://192.168.1.102:1883
+    serverURI: mqtt://192.168.1.104:1883
     clientId: thermal
     topic: test/thermal-image
     qos: 1
@@ -57,7 +64,7 @@ physical:
       type: Raw
     sourceConfig:
       type: MQTTVideoPlayback
-      serverURI: mqtt://192.168.1.102:1883
+      serverURI: mqtt://192.168.1.104:1883
       clientId: playback-read-client
       topic: test/serializer-image
       flushIntervalMS: 50

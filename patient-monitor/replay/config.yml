@@ -1,15 +1,15 @@
 ecg:
-  broker: 192.168.1.102
+  broker: 192.168.1.104
   port: 1883
-  topic: patientMonitor/ECG
+  topic: source/live/patient_monitor_ecg
   period: 10 # milliseconds between publishes
 abp:
-  broker: 192.168.1.102
+  broker: 192.168.1.104
   port: 1883
-  topic: patientMonitor/ABP
+  topic: source/live/patient_monitor_abp
   period: 10 # milliseconds between publishes
 ppg:
-  broker: 192.168.1.102
+  broker: 192.168.1.104
   port: 1883
-  topic: patientMonitor/PPG
+  topic: source/live/patient_monitor_ppg
   period: 10 # milliseconds between publishes

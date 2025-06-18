@@ -15,7 +15,7 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://192.168.1.102:1883
+    serverURI: mqtt://192.168.1.104:1883
     clientId: thermal
     topic: test/thermal-image
     qos: 1
@@ -56,7 +56,7 @@ physical:
       type: Raw
     sourceConfig:
       type: MQTTVideoPlayback
-      serverURI: mqtt://192.168.1.102:1883
+      serverURI: mqtt://192.168.1.104:1883
       clientId: playback-read-client
       topic: test/serializer-image
       flushIntervalMS: 50

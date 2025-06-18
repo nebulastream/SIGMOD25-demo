@@ -1,6 +1,6 @@
 query: |
   SELECT start, end, label
-  FROM ( 
+  FROM (
   SELECT start, end, SpeechRecognitionLabel(ArgMax(output)) as label, MaxValue(output), INFER_MODEL(speech_recognition, (chunked))
   FROM (
       SELECT COUNT(value) as samples, MERGE(value) as chunked
@@ -14,7 +14,7 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://192.168.1.102:1883
+    serverURI: mqtt://192.168.1.104:1883
     clientId: speech-recognition-audio
     topic: test/messages3
     qos: 1

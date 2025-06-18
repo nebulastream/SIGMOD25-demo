@@ -5,7 +5,7 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://192.168.1.102:1883
+    serverURI: mqtt://192.168.1.104:1883
     clientId: lab-values-alert
     topic: alert
     qos: 0
@@ -24,6 +24,6 @@ physical:
       fieldDelimiter: ","
     sourceConfig:
       type: MQTT
-      serverURI: mqtt://192.168.1.102:1883
+      serverURI: mqtt://192.168.1.104:1883
       topic: source/lab_values
       qos: 0

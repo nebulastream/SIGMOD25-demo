@@ -1,0 +1,29 @@
+query: |
+  SELECT * FROM pm_abp_source INTO pm_abp_sink
+sink:
+  name: pm_abp_sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://192.168.1.104:1883
+    clientId: pm-abp-s2s
+    topic: sink/live/patient_monitor_abp
+    qos: 1
+logical:
+  - name: pm_abp_source
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT64
+physical:
+  - logical: pm_abp_source
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://192.168.1.104:1883
+      topic: source/live/patient_monitor_abp
+      qos: 1

@@ -5,9 +5,9 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://192.168.1.102:1883
+    serverURI: mqtt://192.168.1.104:1883
     clientId: audio-s2s
-    topic: sink/audio
+    topic: sink/live/audio
     qos: 1
 logical:
   - name: audio_stream

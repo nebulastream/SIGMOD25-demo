@@ -1,20 +1,20 @@
 hco3:
-  broker: 192.168.1.102
+  broker: 192.168.1.104
   port: 1883
-  topic: labValues/HCO3
+  topic: source/live/lab_values
   period: 10 # seconds between publishes
 natriumBG:
-  broker: 192.168.1.102
+  broker: 192.168.1.104
   port: 1883
-  topic: labValues/NatriumBG
+  topic: source/live/lab_values
   period: 12 # seconds between publishes
 pco2:
-  broker: 192.168.1.102
+  broker: 192.168.1.104
   port: 1883
-  topic: labValues/PCO2
+  topic: source/live/lab_values
   period: 15 # seconds between publishes
 ph:
-  broker: 192.168.1.102
+  broker: 192.168.1.104
   port: 1883
-  topic: source/lab_values #labValues/pH
+  topic: source/live/lab_values
   period: 7 # seconds between publishes
