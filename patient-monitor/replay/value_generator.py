@@ -1,5 +1,6 @@
 import sys
 import time
+from datetime import datetime, timezone
 import random
 import paho.mqtt.client as mqtt
 import yaml
@@ -46,9 +47,14 @@ def run_generator(cfg: dict):
 
     try:
         while True:
+            # true microsecond-precision timestamp since epoch
             now_us = int(time.time() * 1_000_000)
+            #now_us = int(time.time()) * 1_000_000
+            #now_us = time.time_ns() // 1_000
             elapsed = (now_us - START_EPOCH) % CYCLE_DURATION
-            msg_timestamp = START_EPOCH + elapsed
+            msg_timestamp = START_EPOCH + elapsed*1000
+            # use the timestamp below for live data ingestion
+            timestamp = int(datetime.now(timezone.utc).timestamp() * 1_000_000)
 
             if elapsed < INIT_PHASE:
                 value = normal
@@ -62,11 +68,14 @@ def run_generator(cfg: dict):
                 value += random.randint(-VARIATION, VARIATION)
                 value = max(0, value)
 
-            msg = f"{msg_timestamp},{value}|"
+            msg = f"{timestamp},{value}|"
             client.publish(TOPIC, msg, qos=1)
 
             next_tick = START_EPOCH + ((now_us - START_EPOCH) // PUBLISH_PERIOD + 1) * PUBLISH_PERIOD
-            sleep_time = max(0, (next_tick - int(time.time() * 1_000_000)) / 1_000_000)
+            #sleep_time = max(0, (next_tick - int(time.time() * 1_000_000)) / 1_000_000)
+            now_us2 = time.time_ns() // 1_000
+            #now_us2 = int(time.time()) * 1_000_000
+            sleep_time = max(0, (next_tick - now_us2) / 1_000_000)
             time.sleep(sleep_time)
 
     except KeyboardInterrupt:

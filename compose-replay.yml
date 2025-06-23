@@ -1,0 +1,282 @@
+services:
+  # Worker has to run outside the docker container, as it requries access to the host network
+
+  # audio source
+  mic-stream:
+    build:
+      context: mic-server
+      args:
+        HOST_UID: 1000 #${HOST_UID}
+        HOST_GID: 1000 #${HOST_GID}
+
+    # run as your host user so you can access the socket:
+    user: "${HOST_UID}:${HOST_GID}"
+
+    # map in the sound card:
+    devices:
+      - /dev/snd:/dev/snd
+
+    # mount the Pulse/pipewire socket read-only:
+    volumes:
+      - ${XDG_RUNTIME_DIR}/pulse/native:/run/pulse/native:ro
+
+    # publish the raw‑PCM TCP port:
+    ports:
+      - "1234:1234"
+
+    environment:
+      # tell all clients where the socket lives:
+      PULSE_SERVER: unix:/run/pulse/native
+
+      # pick up the discovered mic source:
+      SOURCE: "alsa_input.usb-AKM_AK5370-00.mono-fallback" #${PULSE_SOURCE}
+
+      # for faster data ingestion
+      PULSE_LATENCY_MSEC: "20"
+
+    # on startup, stream your mic out on TCP 1234
+    command: >
+       sh -c "parec --format=s16le --rate=16000 --channels=1 --device=$$SOURCE |
+             socat -u - TCP-LISTEN:1234,reuseaddr,fork"
+
+  # patient monitor ECG signal (replay)
+  pm-signal:
+    container_name: pm-signal
+    build:
+      context: patient-monitor/replay
+      #image: patientMonitorReplay
+
+  # lab values (replay)
+  lab-values-replay:
+    container_name: lab-values
+    build:
+      context: lab-values/replay
+
+  # video (replay)
+#  video-replay:
+#    container_name: video-replay
+#    build:
+#      context: video
+
+ # Queries:
+
+  # multimodal query (shock)
+  shock:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - audio-s2s
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/shock.yaml" ]
+
+  # shock1:
+  #   build:
+  #     context: query-coordinator
+  #     dockerfile: Dockerfile.nebuli
+  #   extra_hosts:
+  #     - "nes:host-gateway"
+  #   depends_on:
+  #     - audio-s2s
+  #   volumes:
+  #     - ./queries:/queries
+  #     - ./model:/model
+  #   command: [ "queries/shock_partial_2.yaml" ]
+
+#  shock2:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    depends_on:
+#      - audio-s2s
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: [ "queries/shock_partial.yaml" ]
+
+  # nebuli Lab Values
+  lab-values:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    depends_on:
+      - lab-values-replay
+    extra_hosts:
+      - "nes:host-gateway"
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/lab_values_s2s.yaml" ]
+
+  # nebuli Patient Monitor Values
+  pm-s2s-ecg:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_ecg_s2s.yaml" ]
+
+  pm-s2s-abp:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_abp_s2s.yaml" ]
+
+  pm-s2s-ppg:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_ppg_s2s.yaml" ]
+
+  pm-hr:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_hr_hpss.yaml" ]
+
+  pm-sysbp:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_sbp_hpss.yaml" ]
+
+  pm-spo2:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_spo2_sps.yaml" ]
+
+  audio-s2s:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    depends_on:
+      - mic-stream
+    extra_hosts:
+      - "nes:host-gateway"
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: ["queries/audio_s2s.yaml"]
+
+#  record-video:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: ["queries/record-video.yml"]
+
+  rgb-and-thermal:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: ["queries/rgb-and-thermal-live.yaml"]
+
+  # speech-recognition:
+  #   build:
+  #     context: query-coordinator
+  #     dockerfile: Dockerfile.nebuli
+  #   depends_on:
+  #     - mic-stream
+  #   extra_hosts:
+  #     - "nes:host-gateway"
+  #   volumes:
+  #     - ./queries:/queries
+  #     - ./model:/model
+  #   command: ["queries/multimodal-1.yaml"]
+
+#  batch-audio:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: ["queries/batch-audio.yaml"]
+
+#  thermal:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: ["queries/thermal.yaml"]
+
+
+  # patient-monitor-start-request:
+  #   image: curlimages/curl:latest
+  #   volumes:
+  #     - ./patient-monitor/live/start_payload_generated.json:/start_payload_generated.json:ro
+  #   environment:
+  #     - JUMP_HOST=${JUMP_HOST}
+  #     - USB_DEV=${USB_DEV}
+  #   entrypoint: /bin/sh
+  #   command: >
+  #     -c '
+  #     curl -X POST http://$JUMP_HOST:5000/start-script \
+  #       -H "X-USB-DEV: $USB_DEV" \
+  #       -H "Content-Type: application/json" \
+  #       -d @/start_payload_generated.json
+      # '
+

@@ -15,10 +15,10 @@ def load_cfg(path: str | Path = "config.yml") -> dict:
 
 def generate_data():
   fps = 50
-  sample_rate = 800
+  sample_rate = 180
   x_window = 3 #seconds
   slide_duration = 1 # seconds
-  #simulated_ecg = nk.ecg_simulate(duration=8, sampling_rate=200, heart_rate=80)
+  simulated_ecg = nk.ecg_simulate(duration=8, sampling_rate=200, heart_rate=80)
   simulated_ecg = nk.ecg_simulate(duration=2, sampling_rate=sample_rate, method="daubechies", heart_rate=60, heart_rate_std=0)
   tile = simulated_ecg[0:sample_rate]
   tile_count = (x_window * sample_rate) + (slide_duration * sample_rate)

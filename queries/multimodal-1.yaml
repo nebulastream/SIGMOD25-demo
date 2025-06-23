@@ -1,26 +1,35 @@
 query: |
-  SELECT * FROM (
-  SELECT id, alertType, timestamp
+  SELECT
+    UINT64(9) as alertType,
+    start as timestamp,
+    freq
   FROM (
-  SELECT UINT32(1) AS alertType, start as timestamp, UINT32(1) AS id
-  FROM (
-  SELECT start, end, label, COUNT(label) as freq
-  FROM (
-      SELECT start, end, label
+    SELECT
+      start,
+      end,
+      SpeechRecognitionLabel(label) as text,
+      freq
+    FROM (
+      SELECT
+        COUNT(label) as freq
       FROM (
-        SELECT start, end, SpeechRecognitionLabel(ArgMax(output)) as label, MaxValue(output), INFER_MODEL(speech_recognition, (chunked))
+        SELECT 
+          INFER_MODEL(speech_recognition, (chunked)),
+          start, 
+          end, 
+          ArgMax(output) as label
         FROM (
-          SELECT COUNT(value) as samples, MERGE(value) as chunked
-          FROM audio_stream WINDOW SLIDING(timestamp, size 1000000 ms, advance by 20000 ms)
+          SELECT MERGE(value) as chunked
+          FROM audio_stream 
+          WINDOW SLIDING(timestamp, size 1000000 ms, advance by 20000 ms)
         )
-      )
-      WHERE label = VARSIZED("nine")
+      ) 
+      GROUP BY label
+      WINDOW TUMBLING(start, size 1000000 ms)
+    )
+    WHERE SpeechRecognitionLabel(label) = VARSIZED("nine") AND freq > UINT64(2)
   )
-  WINDOW TUMBLING(start, size 1000000 ms)
-  HAVING freq > UINT32(5)
-  )
-  )
-  INTO csv_sink
+  INTO sink
 sink:
   name: sink
   type: MQTT

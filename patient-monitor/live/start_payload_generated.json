@@ -4,7 +4,7 @@
     {
       "signal": "PLS",
       "transfer_protocol": "mqtt",
-      "mqtt_broker": "192.168.1.104",
+      "mqtt_broker": "192.168.1.100",
       "mqtt_port": 1883,
       "mqtt_keepalive": 60,
       "mqtt_format": "csv",
@@ -13,7 +13,7 @@
     {
       "signal": "SPO2",
       "transfer_protocol": "mqtt",
-      "mqtt_broker": "192.168.1.104",
+      "mqtt_broker": "192.168.1.100",
       "mqtt_port": 1883,
       "mqtt_keepalive": 60,
       "mqtt_format": "csv",

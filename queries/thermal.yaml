@@ -12,8 +12,8 @@ query: |
       timestamp,
       ImageManipMono16MIN(image) as min_value,
       ImageManipMono16Max(image) as max_value,
-      ImageManipToBase64(ImageManipMono8ToJPG(ImageManipMono16ToMono8(image, width, height, min_value, max_value), width, height)) as image
-    FROM video
+      ImageManipToBase64(ImageManipYUYVToJPG( ImageManipMono8ToYUYV( ImageManipMono16ToMono8(image, width, height, min_value, max_value), width, height),width, height)) as image
+    FROM video_playback
     WHERE 
       pixelFormat == UINT64(17825799)
   )     
@@ -25,7 +25,7 @@ sink:
     inputFormat: JSON
     serverURI: mqtt://192.168.1.104:1883
     clientId: thermal
-    topic: test/thermal-image
+    topic: test/thermal-rgb-image
     qos: 1
 logical:
   - name: video

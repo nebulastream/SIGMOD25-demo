@@ -55,18 +55,44 @@ services:
  # Queries:
 
   # multimodal query (live - experimental)
-  multimodal-query-1:
-    build:
-      context: query-coordinator
-      dockerfile: Dockerfile.nebuli
-    extra_hosts:
-      - "nes:host-gateway"
-    depends_on:
-      - audio-s2s
-    volumes:
-      - ./queries:/queries
-      - ./model:/model
-    command: [ "queries/multimodal-1.yaml" ]
+  # shock:
+  #   build:
+  #     context: query-coordinator
+  #     dockerfile: Dockerfile.nebuli
+  #   extra_hosts:
+  #     - "nes:host-gateway"
+  #   depends_on:
+  #     - audio-s2s
+  #   volumes:
+  #     - ./queries:/queries
+  #     - ./model:/model
+  #   command: [ "queries/shock.yaml" ]
+
+  # shock1:
+  #   build:
+  #     context: query-coordinator
+  #     dockerfile: Dockerfile.nebuli
+  #   extra_hosts:
+  #     - "nes:host-gateway"
+  #   depends_on:
+  #     - audio-s2s
+  #   volumes:
+  #     - ./queries:/queries
+  #     - ./model:/model
+  #   command: [ "queries/shock_partial_2.yaml" ]
+
+#  shock2:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    depends_on:
+#      - audio-s2s
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: [ "queries/shock_partial.yaml" ]
 
   # nebuli Lab Values
   lab-values:
@@ -122,6 +148,32 @@ services:
       - ./model:/model
     command: [ "queries/pm_ppg_s2s.yaml" ]
 
+  pm-hr:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_hr_hpss.yaml" ]
+
+  pm-sysbp:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      - pm-signal
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_sbp_hpss.yaml" ]
+
   audio-s2s:
     build:
       context: query-coordinator
@@ -155,20 +207,20 @@ services:
     volumes:
       - ./queries:/queries
       - ./model:/model
-    command: ["queries/rgb-and-thermal.yaml"]
+    command: ["queries/rgb-and-thermal-live.yaml"]
 
-  speech-recognition:
-    build:
-      context: query-coordinator
-      dockerfile: Dockerfile.nebuli
-    depends_on:
-      - mic-stream
-    extra_hosts:
-      - "nes:host-gateway"
-    volumes:
-      - ./queries:/queries
-      - ./model:/model
-    command: ["queries/speech_recognition_audio.yaml"]
+#  speech-recognition:
+#    build:
+#      context: query-coordinator
+#      dockerfile: Dockerfile.nebuli
+#    depends_on:
+#      - mic-stream
+#    extra_hosts:
+#      - "nes:host-gateway"
+#    volumes:
+#      - ./queries:/queries
+#      - ./model:/model
+#    command: ["queries/multimodal-1.yaml"]
 
 #  batch-audio:
 #    build:
@@ -208,4 +260,3 @@ services:
         -H "Content-Type: application/json" \
         -d @/start_payload_generated.json
       '
-      

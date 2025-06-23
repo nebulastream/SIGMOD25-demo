@@ -9,13 +9,10 @@ query: |
   INTO mqtt
 sink:
   name: mqtt
-  type: MQTT
+  type: File
   config:
+    filePath: test.csv
     inputFormat: CSV
-    serverURI: mqtt://192.168.1.102:1883
-    clientId: record-video
-    topic: test/serializer-image
-    qos: 1
 logical:
   - name: video
     schema:

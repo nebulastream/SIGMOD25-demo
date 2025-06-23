@@ -59,7 +59,7 @@ query: |
                 height,
                 timestamp,
                 pixelFormat
-              FROM video
+              FROM video_playback
               WHERE 
                 pixelFormat == UINT64(17825799) 
             ) WINDOW TUMBLING(timestamp, size 250000000 ms)
@@ -78,7 +78,7 @@ query: |
                 height,
                 timestamp,
                 pixelFormat
-              FROM video
+              FROM video_playback
               WHERE 
                 pixelFormat == UINT64(34603058) 
             ) WINDOW TUMBLING(timestamp, size 250000000 ms)
@@ -96,6 +96,7 @@ sink:
     serverURI: mqtt://192.168.1.104:1883
     clientId: thermal-rgb-image-producer
     topic: test/thermal-rgb-image
+    outOfOrderPolicy: ENFORCE
     qos: 1
 logical:
   - name: video_playback
@@ -134,7 +135,7 @@ physical:
       type: Raw
     sourceConfig:
       type: MQTTVideoPlayback
-      serverURI: mqtt://needmi-pi-frontend.dima.tu-berlin.de:1883
+      serverURI: mqtt://192.168.1.104:1883
       clientId: playback-read-client
       topic: test/serializer-image
       flushIntervalMS: 50

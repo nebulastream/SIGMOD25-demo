@@ -1,6 +1,5 @@
 #! /usr/bin/bash
 
-set -e
 
 function stop_query() {
     nes-nebuli stop -s nes:8080 $QUERY_ID || echo "Could not stop query $QUERY_ID"

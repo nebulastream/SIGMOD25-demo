@@ -1,0 +1,109 @@
+query: |
+  SELECT
+    start / UINT64(1000) as temp_timestamp,
+    start / UINT64(1000) as timestamp
+  FROM (
+        SELECT 
+          ts
+        FROM
+        (
+          SELECT
+            end as ts, timestamp as ots, width as thermal_width, height as thermal_height, image as thermal
+          FROM(
+            SELECT 
+              LAST(image) as image, LAST(width) as width, LAST(height) as height, LAST(timestamp) as timestamp, LAST(pixelFormat) as pf
+            FROM(
+              SELECT 
+                image,
+                width,
+                height,
+                timestamp,
+                pixelFormat
+              FROM video
+              WHERE 
+                pixelFormat == UINT64(17825799) 
+            ) WINDOW TUMBLING(timestamp, size 250000000 ms)
+          )
+      ) INNER JOIN (
+        SELECT
+          end, timestamp as ots, width, height, image as rgb
+        FROM(
+          SELECT 
+            LAST(image) as image, LAST(width) as width, LAST(height) as height, LAST(timestamp) as timestamp, LAST(pixelFormat) as pf
+          FROM(
+            SELECT 
+              image,
+              width,
+              height,
+              timestamp,
+              pixelFormat
+            FROM video
+            WHERE 
+              pixelFormat == UINT64(34603058) 
+          ) WINDOW TUMBLING(timestamp, size 250000000 ms)
+        )
+      ) ON ts = end WINDOW TUMBLING (ots, size 250000000 ms)
+    WHERE ImageManipMono16ToCelsius(ImageManipMono16MAX(ImageManipMono16ROI(thermal, thermal_width, thermal_height, ImageManipFaceDetection(rgb, width, height)))) > FLOAT32(37)
+  )
+  INTO sink
+sink:
+  name: sink
+  type: MQTT
+  config:
+    inputFormat: JSON
+    serverURI: mqtt://192.168.1.104:1883
+    clientId: partial_shock_client
+    topic: sink/live/alert
+    qos: 1
+logical:
+  - name: sysbp
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT64
+  - name: hr
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: value
+        type: FLOAT64
+  - name: video
+    schema:
+      - name: timestamp
+        type: UINT64
+      - name: width
+        type: UINT64
+      - name: height
+        type: UINT64
+      - name: pixelFormat
+        type: UINT64
+      - name: image
+        type: VARSIZED
+physical:
+  - logical: sysbp
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://192.168.1.104:1883
+      topic: source/live/patient_monitor_abp_values
+      qos: 1
+  - logical: hr
+    parserConfig:
+      type: CSV
+      tupleDelimiter: "|"
+      fieldDelimiter: ","
+    sourceConfig:
+      type: MQTT
+      serverURI: mqtt://192.168.1.104:1883
+      topic: source/live/patient_monitor_ecg_values
+      qos: 1
+  - logical: video
+    parserConfig:
+      type: Raw
+    sourceConfig:
+      type: Video
+      sourceSelector: 2

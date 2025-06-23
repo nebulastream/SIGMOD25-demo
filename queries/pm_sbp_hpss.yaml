@@ -5,10 +5,9 @@ sink:
   type: MQTT
   config:
     inputFormat: JSON
-    serverURI: mqtt://mosquitto:1883
-    clientId: client_pm_spo2_hpss_sink
-    topic: sink/patient_monitor_sbp_hpss_sink
-    qos: 0
+    serverURI: mqtt://192.168.1.104:1883
+    topic: sink/live/patient_monitor_abp_values
+    qos: 1
 logical:
   - name: pm_sbp_hpss_source
     schema:
@@ -24,7 +23,6 @@ physical:
       fieldDelimiter: ","
     sourceConfig:
       type: MQTT
-      serverURI: mqtt://mosquitto:1883
-      clientId: client_pm_sbp_hpss_source
-      topic: patientMonitorReplay/SBP/hpss
-      qos: 0
+      serverURI: mqtt://192.168.1.104:1883
+      topic: source/live/patient_monitor_abp_values
+      qos: 1
