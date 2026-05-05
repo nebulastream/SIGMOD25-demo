@@ -16,7 +16,6 @@ XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
 
 # pick the first “input” source (your mic) by default:
 PULSE_SOURCE=$(pactl get-default-source)
-
 ### envvars for patient monitor
 # the IP of the jumphost
 JUMP_HOST=${JUMP_HOST}
@@ -40,5 +39,5 @@ cd ../nebulastream-SIGMOD-demo/
 sudo docker rm -vf $(sudo docker ps -aq) || true
 
 # run nes
-sudo docker run --name nes -d --network=host -v $(pwd):$(pwd) -u root --workdir $(pwd) nebulastream/nes-development:video-demo ./cmake-build-release/nes-single-node-worker/nes-single-node-worker
+# sudo docker run --name nes -d --network=host -v $(pwd):$(pwd) -u root --workdir $(pwd) nebulastream/nes-development:video-demo ./cmake-build-release/nes-single-node-worker/nes-single-node-worker
 

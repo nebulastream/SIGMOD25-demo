@@ -1,29 +1,41 @@
 services:
-  # Worker has to run outside the docker container, as it requries access to the host network
+  nes:
+    image: nebulastream/nes-development:video-demo
+    restart: always
+    stop_grace_period: 10ms
+    network_mode: host
+    volumes:
+      - ../nebulastream-SIGMOD-demo/:/nes
+    working_dir: /nes
+    healthcheck:
+      test: tail -n +2 /proc/net/tcp6 | cut -d":" -f"3"|cut -d" " -f"1" | grep 1F90
+      interval: 1s
+      timeout: 240s
+      retries: 10
+    command: /bin/sh -c ./cmake-build-release/nes-single-node-worker/nes-single-node-worker
 
-  # audio source
   mic-stream:
     build:
       context: mic-server
       args:
         HOST_UID: 1000 #${HOST_UID}
         HOST_GID: 1000 #${HOST_GID}
-
-    # run as your host user so you can access the socket:
+     # run as your host user so you can access the socket:
     user: "${HOST_UID}:${HOST_GID}"
-
-    # map in the sound card:
+     # map in the sound card:
+    stop_grace_period: 10ms
     devices:
       - /dev/snd:/dev/snd
-
+    depends_on:
+      nes:
+        condition: service_healthy
+        restart: true
     # mount the Pulse/pipewire socket read-only:
     volumes:
       - ${XDG_RUNTIME_DIR}/pulse/native:/run/pulse/native:ro
-
     # publish the raw‑PCM TCP port:
     ports:
       - "1234:1234"
-
     environment:
       # tell all clients where the socket lives:
       PULSE_SERVER: unix:/run/pulse/native
@@ -45,62 +57,48 @@ services:
     build:
       context: patient-monitor/replay
       #image: patientMonitorReplay
+    stop_grace_period: 10ms
+    depends_on:
+      nes:
+        condition: service_healthy
+        restart: true
 
   # lab values (replay)
   lab-values-replay:
     container_name: lab-values
     build:
       context: lab-values/replay
+    stop_grace_period: 10ms
+    depends_on:
+      nes:
+        condition: service_healthy
+        restart: true
 
  # Queries:
 
   # multimodal query (live - experimental)
-  # shock:
+  # live-alert:
   #   build:
   #     context: query-coordinator
   #     dockerfile: Dockerfile.nebuli
   #   extra_hosts:
   #     - "nes:host-gateway"
-  #   depends_on:
-  #     - audio-s2s
   #   volumes:
   #     - ./queries:/queries
   #     - ./model:/model
-  #   command: [ "queries/shock.yaml" ]
-
-  # shock1:
-  #   build:
-  #     context: query-coordinator
-  #     dockerfile: Dockerfile.nebuli
-  #   extra_hosts:
-  #     - "nes:host-gateway"
-  #   depends_on:
-  #     - audio-s2s
-  #   volumes:
-  #     - ./queries:/queries
-  #     - ./model:/model
-  #   command: [ "queries/shock_partial_2.yaml" ]
-
-#  shock2:
-#    build:
-#      context: query-coordinator
-#      dockerfile: Dockerfile.nebuli
-#    extra_hosts:
-#      - "nes:host-gateway"
-#    depends_on:
-#      - audio-s2s
-#    volumes:
-#      - ./queries:/queries
-#      - ./model:/model
-#    command: [ "queries/shock_partial.yaml" ]
+  #   command: [ "queries/live-alert.yaml" ]
 
   # nebuli Lab Values
   lab-values:
     build:
       context: query-coordinator
       dockerfile: Dockerfile.nebuli
+    stop_grace_period: 10ms
     depends_on:
-      - lab-values-replay
+      lab-values-replay:
+        condition: service_started
+        restart: true
+
     extra_hosts:
       - "nes:host-gateway"
     volumes:
@@ -113,23 +111,45 @@ services:
     build:
       context: query-coordinator
       dockerfile: Dockerfile.nebuli
+    stop_grace_period: 10ms
     extra_hosts:
       - "nes:host-gateway"
     depends_on:
-      - pm-signal
+      pm-signal:
+        condition: service_started
+        restart: true
     volumes:
       - ./queries:/queries
       - ./model:/model
     command: [ "queries/pm_ecg_s2s.yaml" ]
 
+  # shock:
+  #   build:
+  #     context: query-coordinator
+  #     dockerfile: Dockerfile.nebuli
+  #   stop_grace_period: 10ms
+  #   extra_hosts:
+  #     - "nes:host-gateway"
+  #   depends_on:
+  #     pm-signal:
+  #       condition: service_started
+  #       restart: true
+  #   volumes:
+  #     - ./queries:/queries
+  #     - ./model:/model
+  #   command: [ "queries/shock.yaml" ]
+
   pm-s2s-abp:
     build:
       context: query-coordinator
       dockerfile: Dockerfile.nebuli
+    stop_grace_period: 10ms
     extra_hosts:
       - "nes:host-gateway"
     depends_on:
-      - pm-signal
+      pm-signal:
+        condition: service_started
+        restart: true
     volumes:
       - ./queries:/queries
       - ./model:/model
@@ -139,10 +159,13 @@ services:
     build:
       context: query-coordinator
       dockerfile: Dockerfile.nebuli
+    stop_grace_period: 10ms
     extra_hosts:
       - "nes:host-gateway"
     depends_on:
-      - pm-signal
+      pm-signal:
+        condition: service_started
+        restart: true
     volumes:
       - ./queries:/queries
       - ./model:/model
@@ -152,10 +175,13 @@ services:
     build:
       context: query-coordinator
       dockerfile: Dockerfile.nebuli
+    stop_grace_period: 10ms
     extra_hosts:
       - "nes:host-gateway"
     depends_on:
-      - pm-signal
+      pm-signal:
+        condition: service_started
+        restart: true
     volumes:
       - ./queries:/queries
       - ./model:/model
@@ -165,21 +191,43 @@ services:
     build:
       context: query-coordinator
       dockerfile: Dockerfile.nebuli
+    stop_grace_period: 10ms
     extra_hosts:
       - "nes:host-gateway"
     depends_on:
-      - pm-signal
+      pm-signal:
+        condition: service_started
+        restart: true
     volumes:
       - ./queries:/queries
       - ./model:/model
     command: [ "queries/pm_sbp_hpss.yaml" ]
 
+  pm-spo2:
+    build:
+      context: query-coordinator
+      dockerfile: Dockerfile.nebuli
+    stop_grace_period: 10ms
+    extra_hosts:
+      - "nes:host-gateway"
+    depends_on:
+      pm-signal:
+        condition: service_started
+        restart: true
+    volumes:
+      - ./queries:/queries
+      - ./model:/model
+    command: [ "queries/pm_spo2_sps.yaml" ]
+
   audio-s2s:
     build:
       context: query-coordinator
       dockerfile: Dockerfile.nebuli
+    stop_grace_period: 10ms
     depends_on:
-      - mic-stream
+      mic-stream:
+        condition: service_started
+        restart: true
     extra_hosts:
       - "nes:host-gateway"
     volumes:
@@ -187,21 +235,31 @@ services:
       - ./model:/model
     command: ["queries/audio_s2s.yaml"]
 
-#  record-video:
-#    build:
-#      context: query-coordinator
-#      dockerfile: Dockerfile.nebuli
-#    extra_hosts:
-#      - "nes:host-gateway"
-#    volumes:
-#      - ./queries:/queries
-#      - ./model:/model
-#    command: ["queries/record-video.yml"]
+  record-video:
+     build:
+       context: query-coordinator
+       dockerfile: Dockerfile.nebuli
+     stop_grace_period: 10ms
+     depends_on:
+       nes:
+         condition: service_healthy
+         restart: true
+     extra_hosts:
+       - "nes:host-gateway"
+     volumes:
+       - ./queries:/queries
+       - ./model:/model
+     command: ["queries/record-video.yml"]
 
   rgb-and-thermal:
     build:
       context: query-coordinator
       dockerfile: Dockerfile.nebuli
+    stop_grace_period: 10ms
+    depends_on:
+      nes:
+        condition: service_healthy
+        restart: true
     extra_hosts:
       - "nes:host-gateway"
     volumes:
@@ -245,18 +303,19 @@ services:
 #    command: ["queries/thermal.yaml"]
 
 
-  patient-monitor-start-request:
-    image: curlimages/curl:latest
-    volumes:
-      - ./patient-monitor/live/start_payload_generated.json:/start_payload_generated.json:ro
-    environment:
-      - JUMP_HOST=${JUMP_HOST}
-      - USB_DEV=${USB_DEV}
-    entrypoint: /bin/sh
-    command: >
-      -c '
-      curl -X POST http://$JUMP_HOST:5000/start-script \
-        -H "X-USB-DEV: $USB_DEV" \
-        -H "Content-Type: application/json" \
-        -d @/start_payload_generated.json
-      '
+      #  patient-monitor-start-request:
+      #    image: curlimages/curl:latest
+      #    volumes:
+      #      - ./patient-monitor/live/start_payload_generated.json:/start_payload_generated.json:ro
+      #    environment:
+      #      - JUMP_HOST=${JUMP_HOST}
+      #      - USB_DEV=${USB_DEV}
+      #    entrypoint: /bin/sh
+      #    command: >
+      #      -c '
+      #      curl -X POST http://$JUMP_HOST:5000/start-script \
+      #        -H "X-USB-DEV: $USB_DEV" \
+      #        -H "Content-Type: application/json" \
+      #        -d @/start_payload_generated.json
+      #      '
+

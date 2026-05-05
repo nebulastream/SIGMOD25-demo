@@ -71,7 +71,7 @@ query: |
               ) WINDOW TUMBLING(timestamp, size 250000000 ms)
             )
           ) ON ts = end WINDOW TUMBLING (ots, size 250000000 ms)
-        WHERE ImageManipMono16ToCelsius(ImageManipMono16MAX(ImageManipMono16ROI(thermal, thermal_width, thermal_height, ImageManipFaceDetection(rgb, width, height)))) > FLOAT32(34)
+        WHERE ImageManipMono16ToCelsius(ImageManipMono16MAX(ImageManipMono16ROI(thermal, thermal_width, thermal_height, ImageManipFaceDetection(rgb, width, height)))) > FLOAT32(42)
       )
     ) INNER JOIN (
       SELECT
