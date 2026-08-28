@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import paho.mqtt.client as mqtt
 import yaml
 from pathlib import Path
+from newecg import SignalBuffer, PeriodicSignalHandler, remap
 
 def load_cfg(path: str | Path = "config.yml") -> dict:
   p = Path(path)
@@ -42,8 +43,20 @@ def main() -> None:
   TOPIC          = ecg_cfg.get("topic", "sink/live/patient_monitor_ecg_value")
   PUBLISH_PERIOD = ecg_cfg.get("period", 30) # in ms
 
-  data = generate_data()
+  # data = generate_data()
+  count = 20
+  min_freq = 20
+  max_freq = 120
+  update_width = 0.5
+
+  # Assuming you have the SignalBuffer class and helper functions defined
+  signal_buffer = SignalBuffer.precompute(
+    count,
+    lambda i: nk.ecg_simulate(duration=1,sampling_rate=1000,heart_rate=remap(i, 0, count - 1, min_freq, max_freq))
+  )
   index = 0
+
+  signal_handler = PeriodicSignalHandler(signal_buffer)
 
   client = mqtt.Client()
   client.on_connect = on_connect
@@ -52,13 +65,16 @@ def main() -> None:
   client.connect(BROKER_HOST, BROKER_PORT, keepalive=60)
   client.loop_start()
 
+  signal_handler.reset_signal()
+
   try:
     while True:
       timestamp = int(datetime.now(timezone.utc).timestamp() * 1_000)
 
       csv_row = f"{timestamp},{data[index]}|"
 
-      client.publish(TOPIC, csv_row, qos=1, retain=False)
+      #client.publish(TOPIC, csv_row, qos=1, retain=False)
+      print(signal_handler.get_signal())
 
       index = (index + 1) % len(data)
 
