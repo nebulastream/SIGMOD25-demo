@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # MQTT Broker (Mosquitto)
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"      # MQTT
+      - "1884:1884"      # WebSockets (optional)
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./data:/mosquitto/data
+      - ./logs:/mosquitto/log
+    networks:
+      - ecg-network
+
+  # ECG Simulator (Python App)
+  ecg-simulator:
+    build: 
+      context: .
+      dockerfile: simulator.Dockerfile
+    container_name: ecg-simulator
+    depends_on:
+      - mqtt-broker
+    volumes:
+      - ./config.yml:/app/config.yml
+    networks:
+      - ecg-network
+    restart: unless-stopped
+
+# Network for communication
+networks:
+  ecg-network:
+    driver: bridge
